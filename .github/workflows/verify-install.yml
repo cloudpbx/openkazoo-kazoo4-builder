@@ -1,0 +1,35 @@
+name: verify-install
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    container: debian:12
+    steps:
+      - name: Add repo + install
+        run: |
+          set -euo pipefail
+          apt-get update && apt-get install -y curl ca-certificates gnupg
+          curl -fsSL https://cloudpbx.github.io/openkazoo-kazoo4-builder/pubkey.asc \
+            | tee /usr/share/keyrings/openkazoo.asc > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/openkazoo.asc] \
+            https://cloudpbx.github.io/openkazoo-kazoo4-builder bookworm main" \
+            > /etc/apt/sources.list.d/openkazoo.list
+          apt-get update
+          apt-get install -y kazoo freeswitch kamailio
+      - name: Smoke-test artifacts present
+        run: |
+          set -euo pipefail
+          test -d /opt/kazoo
+          test -f /usr/lib/freeswitch/mod/mod_kazoo.so
+          command -v kamailio
+          /usr/local/lib/erlang/bin/erl -eval 'io:format("~s~n",[erlang:system_info(otp_release)]),halt().' -noshell | grep -q '^26'
