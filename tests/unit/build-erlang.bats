@@ -1,5 +1,4 @@
-setup() { load '../../scripts/lib.sh'; mkdir -p "$BATS_TEST_DIRNAME/.tmp"; TMP="$(mktemp -d "$BATS_TEST_DIRNAME/.tmp/XXXXXX")"; }
-teardown() { rm -rf "$TMP"; }
+setup() { load '../../scripts/lib.sh'; TMP="$BATS_TEST_TMPDIR"; }
 
 @test "erlang control declares Package: erlang and given version/arch" {
   write_deb_control "$TMP" erlang "26.2.5.20-1" amd64 "Erlang/OTP for Kazoo 4.4"
