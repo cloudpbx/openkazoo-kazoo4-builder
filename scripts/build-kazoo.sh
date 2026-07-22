@@ -18,10 +18,12 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 patch_include_erts() {
   local f="$1" out="$1.new"
   if grep -q 'include_erts' "$f"; then
-    sed 's/{include_erts, true}/{include_erts, false}/g' "$f" > "$out"
+    # tolerate whitespace variations so a reformat upstream can't silently no-op
+    # (which would leave ERTS bundled, breaking the erlang-dependency model).
+    sed -E 's/\{include_erts,[[:space:]]*true\}/{include_erts, false}/g' "$f" > "$out"
   else
     awk '{ print }
-         /\{relx, \[/ && !ins { print "  {include_erts, false},"; ins = 1 }' "$f" > "$out"
+         /\{relx,[[:space:]]*\[/ && !ins { print "  {include_erts, false},"; ins = 1 }' "$f" > "$out"
   fi
   mv "$out" "$f"
 }

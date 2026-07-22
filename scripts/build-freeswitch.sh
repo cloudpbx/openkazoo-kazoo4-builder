@@ -86,6 +86,12 @@ mkdir -p "$STAGE/DEBIAN" "$STAGE/usr/bin" "$STAGE/usr/lib" "$STAGE/etc/freeswitc
 cp -a /usr/bin/freeswitch "$STAGE/usr/bin/"
 # libfreeswitch.so* must live in /usr/lib (the binary's RUNPATH).
 find /usr/lib -maxdepth 1 -name 'libfreeswitch.so*' -exec cp -a {} "$STAGE/usr/lib/" \;
+# Bundle the from-source sofia-sip + spandsp shared libs too: FreeSWITCH links
+# against them, but Debian's packaged versions are too old (that is *why* we
+# built them from source), so apt cannot satisfy them on the target. Ship them
+# in the package or freeswitch fails to load at runtime on a clean host.
+find /usr/lib -maxdepth 1 \( -name 'libsofia-sip-ua.so*' -o -name 'libspandsp.so*' \) \
+  -exec cp -a {} "$STAGE/usr/lib/" \;
 [ -d /usr/lib/freeswitch ] && cp -a /usr/lib/freeswitch "$STAGE/usr/lib/"
 cp -a /etc/freeswitch/. "$STAGE/etc/freeswitch/" 2>/dev/null || true
 printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postinst"
