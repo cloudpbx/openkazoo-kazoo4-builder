@@ -35,4 +35,21 @@ RUN curl -fsSL --retry 5 --retry-all-errors \
       -o /usr/local/bin/rebar3 \
  && chmod +x /usr/local/bin/rebar3
 
+# Build Erlang/OTP into the image (~30 min, cached layer). It MUST live in the
+# image, not be built per-component at runtime: kazoo (rebar3) and freeswitch
+# (mod_kazoo ei headers) run in their own fresh `docker run --rm` containers and
+# need `erl`/`escript` on PATH — rebar3 is itself an escript and cannot start
+# without Erlang. build-erlang.sh then just packages this tree into the deb.
+# Builds against the base image's system OpenSSL (3.x on bookworm).
+RUN set -eux \
+ && export KERL_BUILD_BACKEND=git \
+ && export KERL_CONFIGURE_OPTIONS="--without-javac --without-wx --without-debugger \
+      --without-observer --without-et --without-megaco" \
+ && kerl build "${OTP_VERSION}" "otp-${OTP_VERSION}" \
+ && kerl install "otp-${OTP_VERSION}" /usr/local/lib/erlang \
+ && /usr/local/lib/erlang/bin/erl \
+      -eval 'io:format("~s~n",[erlang:system_info(otp_release)]),halt().' -noshell
+
+ENV PATH="/usr/local/lib/erlang/bin:${PATH}"
+
 WORKDIR /work
