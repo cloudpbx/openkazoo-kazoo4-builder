@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1.6
+# Build image for Kazoo 4.4 stack .deb packages (Debian 11 / bullseye).
+# Built natively per-arch (amd64 or arm64) — no cross-compilation.
+# Toolchain mirrors docker/Dockerfile.debian-12 (and the kazoo-deploy
+# build-packages.yml `bootstrap` task).
+#
+# NOTE: Debian 11 ships OpenSSL 1.1.1 (Debian 12 has 3.x). OTP 26.2.5.20 builds
+# fine against 1.1.1, and sofia-sip/spandsp are built from source regardless, so
+# the toolchain list is intentionally identical to bookworm's. Any bullseye-only
+# package or ABI differences are expected to surface in the first CI dry-runs.
+FROM debian:11
+
+ARG OTP_VERSION=26.2.5.20
+ARG REBAR_VERSION=3.27.0
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential autoconf m4 libncurses-dev libssl-dev libssh-dev \
+      unixodbc-dev xsltproc libxml2-utils flex bison make pkg-config \
+      dpkg-dev debhelper apt-utils devscripts debsigs reprepro \
+      gnupg git curl wget jq ca-certificates unzip golang \
+      default-libmysqlclient-dev libcurl4-openssl-dev libpcre3-dev libpq-dev \
+      libsqlite3-dev libedit-dev libtiff-dev liblua5.4-dev uuid-dev \
+      libavformat-dev libswscale-dev libavcodec-dev libavutil-dev \
+      libspeex-dev libspeexdsp-dev libopus-dev libvpx-dev yasm \
+      libsndfile1-dev libldns-dev libmpg123-dev libmp3lame-dev libshout3-dev \
+      libjpeg-dev libopenjp2-7-dev libuv1-dev libpng-dev libvorbis-dev libogg-dev \
+      libpcre2-dev libevent-dev libgeoip-dev libjson-c-dev librabbitmq-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Public repos only — rewrite any SSH GitHub URLs to HTTPS.
+RUN git config --global url."https://github.com/".insteadOf "git@github.com:" \
+ && git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+# kerl (OTP version manager) + rebar3, both pinned.
+RUN curl -fsSL --retry 5 --retry-all-errors \
+      https://raw.githubusercontent.com/kerl/kerl/master/kerl -o /usr/local/bin/kerl \
+ && chmod +x /usr/local/bin/kerl \
+ && curl -fsSL --retry 5 --retry-all-errors \
+      "https://github.com/erlang/rebar3/releases/download/${REBAR_VERSION}/rebar3" \
+      -o /usr/local/bin/rebar3 \
+ && chmod +x /usr/local/bin/rebar3
+
+WORKDIR /work
