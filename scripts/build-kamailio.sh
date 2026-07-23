@@ -26,10 +26,21 @@ echo ">> Building kamailio (~30 min)"
 
 echo ">> Packaging kamailio deb: $DEB"
 STAGE="$B/kamailio-deb"; rm -rf "$STAGE"
-mkdir -p "$STAGE/usr/sbin" "$STAGE/usr/lib/kamailio" "$STAGE/etc/kamailio"
-cp -a /usr/sbin/kamailio "$STAGE/usr/sbin/" 2>/dev/null || true
-cp -a /usr/lib/kamailio/. "$STAGE/usr/lib/kamailio/" 2>/dev/null || true
-cp -a /etc/kamailio/. "$STAGE/etc/kamailio/" 2>/dev/null || true
+mkdir -p "$STAGE/usr/sbin"
+cp -a /usr/sbin/kamailio "$STAGE/usr/sbin/"
+# `make cfg PREFIX=/usr` installs modules under /usr/lib64 on 64-bit (not
+# /usr/lib) and default config under /usr/etc. Preserve whichever paths the
+# build actually used — the binary's compiled-in module search path must match.
+for d in /usr/lib64/kamailio /usr/lib/kamailio /usr/etc/kamailio /etc/kamailio; do
+  [ -d "$d" ] || continue
+  dest="$STAGE$(dirname "$d")"
+  mkdir -p "$dest"
+  cp -a "$d" "$dest/"
+done
+# Gate: a kamailio package without its modules is useless (silent ecallmgr/SIP
+# failures). Fail loudly rather than shipping a binary-only deb.
+find "$STAGE" -path '*kamailio*' -name '*.so' -print -quit | grep -q . \
+  || die "no kamailio modules staged — check install LIBDIR (expected /usr/lib64/kamailio/modules)"
 write_deb_control "$STAGE" kamailio "$VER" "$ARCH" \
   "Kamailio ${KAMAILIO_VERSION} SIP proxy (db_mysql db_postgres tls kazoo rabbitmq)"
 dpkg-deb --build "$STAGE" "$DEB"
