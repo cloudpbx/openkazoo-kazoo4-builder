@@ -11,7 +11,7 @@ playbook; the repository layout follows `openkazoo-kazoo5-builder`.
 |---|---|---|---|
 | `erlang` | 26.2.5.20 | `erlang/otp` (via kerl) | OTP 26 is the floor **and** ceiling — see below |
 | `kazoo` | 4.4 | `cloudpbx/openkazoo@4.4` | `rebar3 compile && rebar3 tar` (default profile), `include_erts=false` |
-| `freeswitch` | 1.10.9 | `signalwire/freeswitch` | + sofia-sip 1.13.17 & spandsp (source); `mod_kazoo` overlaid from `openkazoo/freeswitch-mod_kazoo@4.4` |
+| `freeswitch` | 1.10.9 | `signalwire/freeswitch` | + sofia-sip 1.13.17 & spandsp (source); `mod_kazoo` overlaid from `openkazoo/freeswitch-mod_kazoo@4.4`; **no video** (`--disable-libvpx/--disable-libyuv`, see DECISIONS.md D-01) |
 | `kamailio` | 5.8.8 | `kamailio/kamailio` | modules `db_mysql db_postgres tls kazoo rabbitmq` |
 
 ### The OTP-26 ceiling

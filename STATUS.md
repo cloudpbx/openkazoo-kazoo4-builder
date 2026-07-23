@@ -68,10 +68,14 @@ published to a GitHub Pages apt repo. Build recipe ported from the
 
 ## Deliberate scope decisions
 
-- **FreeSWITCH ships without VP8/VP9 video** (`--disable-libvpx --disable-libyuv`).
-  `mod_kazoo` is SIP/media only, and bundled libvpx cannot build on arm64. Audio
-  telephony is unaffected. Re-enable video later as a feature (needs an arm64
-  libvpx fix) if conferencing video is required.
+- **No video support (by design).** We do not intend to support video at this
+  time. FreeSWITCH is therefore built with `--disable-libvpx --disable-libyuv`
+  (no VP8/VP9 codecs). This is a product decision, not merely a build workaround
+  — though it also sidesteps the fact that FreeSWITCH's bundled libvpx cannot
+  build on arm64. `mod_kazoo` is SIP/media only; audio telephony (calls, media
+  proxy, IVR, voicemail, fax) is unaffected. If video is ever required it would
+  be a deliberate future feature (and would need an arm64 libvpx fix). See
+  `docs/DECISIONS.md`.
 
 ## Open risks
 

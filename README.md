@@ -39,6 +39,10 @@ Debian build image (`docker/Dockerfile.debian-11` or `docker/Dockerfile.debian-1
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the
 [design spec](docs/superpowers/specs/2026-07-22-kazoo4-fullstack-debian-builder-design.md).
 
+> **No video support** — the FreeSWITCH package is built without VP8/VP9 codecs
+> (audio telephony only). This is a deliberate scope decision; see
+> [docs/DECISIONS.md](docs/DECISIONS.md) (D-01).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

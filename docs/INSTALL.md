@@ -34,3 +34,7 @@ sudo apt-get install -y kazoo freeswitch kamailio
 - These are community builds; there is no commercial support.
 - Service orchestration (systemd units, config, clustering) is handled by your
   deployment tooling (e.g. `kazoo-deploy`), not by these packages.
+- **No video support.** The FreeSWITCH package ships without VP8/VP9 video
+  codecs (built `--disable-libvpx --disable-libyuv`). Audio telephony — calls,
+  media proxy, IVR, voicemail, fax — is fully supported. See
+  [DECISIONS.md](DECISIONS.md) (D-01).
