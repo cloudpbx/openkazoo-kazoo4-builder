@@ -18,7 +18,7 @@ published to a GitHub Pages apt repo. Build recipe ported from the
 - Four component build scripts (`scripts/build-{erlang,kazoo,freeswitch,kamailio}.sh`), distro-parameterized (`~<codename>` version suffix, `build/out/<codename>/`).
 - `scripts/sign.sh` (debsigs) and `scripts/publish.sh` (reprepro, two suites: bullseye + bookworm, multi-arch).
 - CI: `.github/workflows/build.yml` (matrix `component × arch × distro`, 16 legs) + `verify-install.yml` (arch × distro).
-- 16 bats unit tests (pure-logic units), all green locally.
+- 15 bats unit tests (pure-logic units), all green locally.
 - Docs: README, INSTALL, ARCHITECTURE, CONTRIBUTING, GPG-KEY.
 
 ## Key constraints

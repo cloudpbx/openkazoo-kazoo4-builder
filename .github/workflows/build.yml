@@ -81,4 +81,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/out/*.deb
+          files: build/out/*/*.deb

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # publish.sh — assemble a signed, multi-arch pooled apt repo under build/repo/.
-# Inputs: build/out/*.deb (any component, amd64 and/or arm64).
+# Inputs: build/out/<codename>/*.deb (any component, amd64 and/or arm64).
 # Output: build/repo/{pool,dists}/... + build/repo/pubkey.asc
 # Adapted from openkazoo-kazoo5-builder/scripts/publish.sh (reprepro), extended
 # to Architectures: amd64 arm64 and dropping the yum path.
