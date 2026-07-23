@@ -28,9 +28,11 @@ assert_mod_kazoo_fix() {
 
 [ "${1:-}" = "--lib-only" ] && return 0
 
-ROOT="$(repo_root)"; OUT="$ROOT/build/out"; B="$ROOT/build"
+ROOT="$(repo_root)"; B="$ROOT/build"
+CODENAME="$(codename_for "${DISTRO:?}")"
+OUT="$ROOT/build/out/$CODENAME"
 ARCH="$(arch_normalize "$(uname -m)")"
-VER="${FREESWITCH_VERSION:?}-${PKG_REVISION:?}"
+VER="${FREESWITCH_VERSION:?}-${PKG_REVISION:?}~${CODENAME}"
 DEB="$OUT/freeswitch_${VER}_${ARCH}.deb"
 mkdir -p "$OUT"
 [ -f "$DEB" ] && { echo ">> $DEB exists — skipping"; exit 0; }

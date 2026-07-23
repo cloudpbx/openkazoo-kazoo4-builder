@@ -9,10 +9,11 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 ROOT="$(repo_root)"
-OUT="$ROOT/build/out"
+CODENAME="$(codename_for "${DISTRO:?}")"
+OUT="$ROOT/build/out/$CODENAME"
 STAGE="$ROOT/build/erlang-deb"
 ARCH="$(arch_normalize "$(uname -m)")"
-VER="${OTP_VERSION:?}-${PKG_REVISION:?}"
+VER="${OTP_VERSION:?}-${PKG_REVISION:?}~${CODENAME}"
 DEB="$OUT/erlang_${VER}_${ARCH}.deb"
 
 mkdir -p "$OUT"

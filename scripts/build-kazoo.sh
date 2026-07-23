@@ -35,7 +35,8 @@ synth_version() { echo "4.4.0~${1}.${2}.${3}"; }
 [ "${1:-}" = "--lib-only" ] && return 0
 
 ROOT="$(repo_root)"
-OUT="$ROOT/build/out"
+CODENAME="$(codename_for "${DISTRO:?}")"
+OUT="$ROOT/build/out/$CODENAME"
 SRC="$ROOT/build/kazoo-src"
 STAGE="$ROOT/build/kazoo-deb"
 ARCH="$(arch_normalize "$(uname -m)")"
@@ -48,7 +49,7 @@ git clone --depth 1 --branch "$KAZOO_VERSION" \
 
 SHORTSHA="$(git -C "$SRC" rev-parse --short=8 HEAD)"
 TODAY="$(date -u +%Y%m%d)"
-PKG_VERSION="$(synth_version "$KAZOO_VERSION" "$TODAY" "$SHORTSHA")-${PKG_REVISION:?}"
+PKG_VERSION="$(synth_version "$KAZOO_VERSION" "$TODAY" "$SHORTSHA")-${PKG_REVISION:?}~${CODENAME}"
 DEB="$OUT/kazoo_${PKG_VERSION}_${ARCH}.deb"
 [ -f "$DEB" ] && { echo ">> $DEB exists — skipping"; exit 0; }
 
