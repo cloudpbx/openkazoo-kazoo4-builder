@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# publish.sh — assemble a signed, multi-arch pooled apt repo under build/repo/.
+# Inputs: build/out/*.deb (any component, amd64 and/or arm64).
+# Output: build/repo/{pool,dists}/... + build/repo/pubkey.asc
+# Adapted from openkazoo-kazoo5-builder/scripts/publish.sh (reprepro), extended
+# to Architectures: amd64 arm64 and dropping the yum path.
+set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+write_distributions() {
+  local apt_dir="$1" fpr="$2"
+  mkdir -p "$apt_dir/conf"
+  cat > "$apt_dir/conf/distributions" <<EOF
+Origin: openkazoo
+Label: openkazoo-kazoo4-builder
+Suite: stable
+Codename: bookworm
+Architectures: amd64 arm64
+Components: main
+Description: Community-built Kazoo 4.4 stack for Debian 12
+SignWith: $fpr
+EOF
+}
+
+[ "${1:-}" = "--lib-only" ] && return 0
+
+ROOT="$(repo_root)"
+OUT="${OUT_DIR_OVERRIDE:-$ROOT/build/out}"
+REPO="$ROOT/build/repo"; APT="$REPO/debian"
+
+shopt -s nullglob; DEBS=("$OUT"/*.deb); shopt -u nullglob
+[ "${#DEBS[@]}" -gt 0 ] || die "no packages in $OUT; run 'make build' first"
+
+if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
+  TMP_GNUPGHOME="$(mktemp -d)"; trap 'rm -rf "$TMP_GNUPGHOME"' EXIT
+  chmod 700 "$TMP_GNUPGHOME"; export GNUPGHOME="$TMP_GNUPGHOME"
+  echo "$GPG_PRIVATE_KEY" | gpg --batch --import 2>&1 | tail -3
+fi
+FPR="$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/{print $10; exit}')"
+[ -n "$FPR" ] || die "no GPG key available"
+
+mkdir -p "$REPO"
+gpg --armor --export "$FPR" > "$REPO/pubkey.asc"
+write_distributions "$APT" "$FPR"
+for deb in "${DEBS[@]}"; do
+  echo ">> reprepro includedeb bookworm: $deb"
+  reprepro -b "$APT" includedeb bookworm "$deb"
+done
+
+cat > "$REPO/README.md" <<'EOF'
+# openkazoo-kazoo4-builder package repository
+This `gh-pages` branch hosts the apt repository for the Kazoo 4.4 stack.
+See docs/INSTALL.md in the main branch. Public signing key: `pubkey.asc`.
+EOF
+echo ">> Published under: $REPO"

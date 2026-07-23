@@ -1,0 +1,77 @@
+name: build
+on:
+  push:
+    tags: ['v4.*']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish to gh-pages + create Release'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # create releases + push gh-pages
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [erlang, kazoo, freeswitch, kamailio]
+        arch: [amd64, arm64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Build ${{ matrix.component }} (${{ matrix.arch }})
+        run: make build COMPONENT=${{ matrix.component }}
+      - name: Sign
+        if: ${{ inputs.publish || startsWith(github.ref, 'refs/tags/') }}
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          docker run --rm -v "$PWD":/work \
+            -e GPG_PRIVATE_KEY -e GPG_PASSPHRASE \
+            openkazoo-kazoo4-builder:debian-12 /work/scripts/sign.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.component }}-${{ matrix.arch }}
+          path: build/out/*.deb
+
+  publish:
+    needs: build
+    if: ${{ inputs.publish || startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: _artifacts
+      - name: Collect debs into build/out/
+        run: |
+          mkdir -p build/out
+          find _artifacts -name '*.deb' -exec cp {} build/out/ \;
+          ls -la build/out
+      - name: Assemble apt repo
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          make docker-build
+          docker run --rm -v "$PWD":/work \
+            -e GPG_PRIVATE_KEY -e GPG_PASSPHRASE \
+            openkazoo-kazoo4-builder:debian-12 /work/scripts/publish.sh
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/repo
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/out/*.deb
