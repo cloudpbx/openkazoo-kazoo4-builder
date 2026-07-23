@@ -7,19 +7,26 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
+# The supported Debian releases (codenames). One reprepro distribution each.
+DISTRO_CODENAMES=(bullseye bookworm)
+
 write_distributions() {
-  local apt_dir="$1" fpr="$2"
+  local apt_dir="$1" fpr="$2" cn
   mkdir -p "$apt_dir/conf"
-  cat > "$apt_dir/conf/distributions" <<EOF
+  : > "$apt_dir/conf/distributions"
+  for cn in "${DISTRO_CODENAMES[@]}"; do
+    cat >> "$apt_dir/conf/distributions" <<EOF
 Origin: openkazoo
 Label: openkazoo-kazoo4-builder
 Suite: stable
-Codename: bookworm
+Codename: $cn
 Architectures: amd64 arm64
 Components: main
-Description: Community-built Kazoo 4.4 stack for Debian 12
+Description: Community-built Kazoo 4.4 stack for Debian $cn
 SignWith: $fpr
+
 EOF
+  done
 }
 
 [ "${1:-}" = "--lib-only" ] && return 0
@@ -28,8 +35,11 @@ ROOT="$(repo_root)"
 OUT="${OUT_DIR_OVERRIDE:-$ROOT/build/out}"
 REPO="$ROOT/build/repo"; APT="$REPO/debian"
 
-shopt -s nullglob; DEBS=("$OUT"/*.deb); shopt -u nullglob
-[ "${#DEBS[@]}" -gt 0 ] || die "no packages in $OUT; run 'make build' first"
+# debs live under build/out/<codename>/ (one dir per Debian release).
+DEBS=()
+while IFS= read -r -d '' deb; do DEBS+=("$deb"); done \
+  < <(find "$OUT" -type f -name '*.deb' -print0)
+[ "${#DEBS[@]}" -gt 0 ] || die "no packages under $OUT; run 'make build' first"
 
 if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
   TMP_GNUPGHOME="$(mktemp -d)"; trap 'rm -rf "$TMP_GNUPGHOME"' EXIT
@@ -42,9 +52,13 @@ FPR="$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/{print $10; exit}'
 mkdir -p "$REPO"
 gpg --armor --export "$FPR" > "$REPO/pubkey.asc"
 write_distributions "$APT" "$FPR"
-for deb in "${DEBS[@]}"; do
-  echo ">> reprepro includedeb bookworm: $deb"
-  reprepro -b "$APT" includedeb bookworm "$deb"
+# Route each deb into the reprepro distribution matching its codename dir.
+for cn in "${DISTRO_CODENAMES[@]}"; do
+  shopt -s nullglob; cdebs=("$OUT/$cn"/*.deb); shopt -u nullglob
+  for deb in "${cdebs[@]}"; do
+    echo ">> reprepro includedeb $cn: $deb"
+    reprepro -b "$APT" includedeb "$cn" "$deb"
+  done
 done
 
 cat > "$REPO/README.md" <<'EOF'

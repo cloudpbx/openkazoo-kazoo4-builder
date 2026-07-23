@@ -25,9 +25,11 @@ FPR="$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/{print $10; exit}'
 [ -n "$FPR" ] || die "no secret key found in keyring"
 echo ">> Signing with $FPR"
 
-shopt -s nullglob
-DEBS=("$OUT"/*.deb); shopt -u nullglob
-[ "${#DEBS[@]}" -gt 0 ] || die "no .deb files in $OUT"
+# debs live under build/out/<codename>/ (one dir per Debian release).
+DEBS=()
+while IFS= read -r -d '' deb; do DEBS+=("$deb"); done \
+  < <(find "$OUT" -type f -name '*.deb' -print0)
+[ "${#DEBS[@]}" -gt 0 ] || die "no .deb files under $OUT"
 for deb in "${DEBS[@]}"; do
   echo ">> debsigs sign: $deb"
   debsigs --sign=origin --default-key="$FPR" "$deb"
