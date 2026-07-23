@@ -18,7 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential autoconf m4 libncurses-dev libssl-dev libssh-dev \
       unixodbc-dev xsltproc libxml2-utils flex bison make pkg-config \
       dpkg-dev debhelper apt-utils devscripts debsigs reprepro \
-      gnupg git curl wget jq ca-certificates unzip golang \
+      libtool libtool-bin \
+      gnupg git curl wget jq ca-certificates unzip \
       default-libmysqlclient-dev libcurl4-openssl-dev libpcre3-dev libpq-dev \
       libsqlite3-dev libedit-dev libtiff-dev liblua5.4-dev uuid-dev \
       libavformat-dev libswscale-dev libavcodec-dev libavutil-dev \
@@ -31,6 +32,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Public repos only — rewrite any SSH GitHub URLs to HTTPS.
 RUN git config --global url."https://github.com/".insteadOf "git@github.com:" \
  && git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+# Modern Go from the official tarball. Kazoo's martini/secsipid STIR-SHAKEN
+# extension needs Go >= 1.16 (package io/fs); Debian's packaged golang is too
+# old on bullseye (1.15). Pinned so both distros use the same toolchain.
+# TARGETARCH (amd64/arm64) is supplied by BuildKit and matches Go's naming.
+ARG GO_VERSION=1.22.6
+ARG TARGETARCH
+RUN curl -fsSL --retry 5 --retry-all-errors \
+      "https://go.dev/dl/go${GO_VERSION}.linux-${TARGETARCH}.tar.gz" -o /tmp/go.tgz \
+ && tar -C /usr/local -xzf /tmp/go.tgz \
+ && rm /tmp/go.tgz \
+ && /usr/local/go/bin/go version
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 # kerl (OTP version manager) + rebar3, both pinned.
 RUN curl -fsSL --retry 5 --retry-all-errors \

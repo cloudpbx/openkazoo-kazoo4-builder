@@ -8,6 +8,7 @@ SHELL          := /usr/bin/env bash
 KAZOO_VERSION       := $(shell cat config/kazoo.version)
 OTP_VERSION         := $(shell cat config/otp.version)
 REBAR_VERSION       := $(shell cat config/rebar.version)
+GO_VERSION          := $(shell cat config/go.version)
 PKG_REVISION        := $(shell cat config/package.revision)
 FREESWITCH_VERSION  := $(shell cat config/freeswitch.version)
 SOFIA_SIP_VERSION   := $(shell cat config/sofia-sip.version)
@@ -56,6 +57,7 @@ docker-build: check-distro  ## Build the $(DISTRO) build image
 	docker build \
 	  --build-arg OTP_VERSION=$(OTP_VERSION) \
 	  --build-arg REBAR_VERSION=$(REBAR_VERSION) \
+	  --build-arg GO_VERSION=$(GO_VERSION) \
 	  -t $(IMAGE) \
 	  -f docker/Dockerfile.$(DISTRO) .
 
