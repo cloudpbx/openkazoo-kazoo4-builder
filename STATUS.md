@@ -6,18 +6,19 @@
 ## Scope
 
 Full Kazoo 4.4 stack (`erlang`, `kazoo`, `freeswitch`, `kamailio`) as signed
-Debian 12 `.deb`s for **amd64 + arm64**, published to a GitHub Pages apt repo.
-Build recipe ported from the `kazoo-deploy` `build-packages.yml` playbook;
-structure from `openkazoo-kazoo5-builder`.
+`.deb`s for **Debian 11 (bullseye) + Debian 12 (bookworm)**, **amd64 + arm64**,
+published to a GitHub Pages apt repo. Build recipe ported from the
+`kazoo-deploy` `build-packages.yml` playbook; structure from
+`openkazoo-kazoo5-builder`.
 
 ## What's implemented
 
-- `config/` version pins, `Makefile`, MIT `LICENSE`.
-- Debian 12 build image (`docker/Dockerfile.debian-12`): kerl, rebar3, full toolchain.
-- Four component build scripts (`scripts/build-{erlang,kazoo,freeswitch,kamailio}.sh`).
-- `scripts/sign.sh` (debsigs) and `scripts/publish.sh` (reprepro, multi-arch apt repo).
-- CI: `.github/workflows/build.yml` (matrix `component × arch`) + `verify-install.yml`.
-- 13 bats unit tests (pure-logic units), all green locally.
+- `config/` version pins, `Makefile` (with `DISTRO` selector), MIT `LICENSE`.
+- Debian 11 + Debian 12 build images (`docker/Dockerfile.debian-11`, `docker/Dockerfile.debian-12`): kerl, rebar3, full toolchain.
+- Four component build scripts (`scripts/build-{erlang,kazoo,freeswitch,kamailio}.sh`), distro-parameterized (`~<codename>` version suffix, `build/out/<codename>/`).
+- `scripts/sign.sh` (debsigs) and `scripts/publish.sh` (reprepro, two suites: bullseye + bookworm, multi-arch).
+- CI: `.github/workflows/build.yml` (matrix `component × arch × distro`, 16 legs) + `verify-install.yml` (arch × distro).
+- 16 bats unit tests (pure-logic units), all green locally.
 - Docs: README, INSTALL, ARCHITECTURE, CONTRIBUTING, GPG-KEY.
 
 ## Key constraints
@@ -35,7 +36,7 @@ structure from `openkazoo-kazoo5-builder`.
 1. Maintainer sets `GPG_PRIVATE_KEY` (+ optional `GPG_PASSPHRASE`) — see
    `docs/GPG-KEY.md`.
 2. Run the `build` workflow with `publish=false` (Actions → build → Run
-   workflow) and iterate until all 8 matrix legs are green. Document each fix in
+   workflow) and iterate until all 16 matrix legs are green. Document each fix in
    its own commit.
 3. Tag to publish:
    ```bash
@@ -49,6 +50,11 @@ structure from `openkazoo-kazoo5-builder`.
   repo public (kazoo5-builder is public).
 - **arm64 FreeSWITCH / sofia-sip / spandsp** are unproven — the playbook is
   amd64-only. Expect the `freeswitch × arm64` leg to need the most iteration.
-- **First green will take several dry-runs** (kazoo5-builder took 11).
+- **Debian 11 (bullseye) is unproven** — the playbook targets Debian 12. Bullseye
+  ships OpenSSL 1.1.1 (not 3.x) and older `-dev` libs; OTP 26 builds against
+  1.1.1, but the `freeswitch`/`kamailio` bullseye legs may need shake-out. The
+  toolchain list is identical to bookworm's; any package/ABI diffs surface in CI.
+- **First green will take several dry-runs** (kazoo5-builder took 11); the matrix
+  is now 16 legs.
 - The build image and full compilation are validated only in CI (local runs
   cover the bats logic units, not the multi-hour builds).

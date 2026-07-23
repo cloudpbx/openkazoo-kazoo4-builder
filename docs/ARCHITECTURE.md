@@ -33,7 +33,7 @@ FreeSWITCH is compiled with `-Wno-error -D_GNU_SOURCE` (the latter prevents a
 
 ```
 config/*.version ─┐
-                  ├─► docker/Dockerfile.debian-12 (kerl, rebar3, toolchain)
+                  ├─► docker/Dockerfile.debian-{11,12} (kerl, rebar3, toolchain)
                   │        │
                   │        ▼   (make build COMPONENT=… runs inside the image)
                   └─► scripts/build-<component>.sh ─► build/out/<pkg>_<ver>_<arch>.deb
@@ -43,22 +43,29 @@ config/*.version ─┐
                             scripts/publish.sh (reprepro) ─► build/repo/{pool,dists}/  + pubkey.asc
 ```
 
-- **Build image:** one Debian 12 image, built natively per-arch (no
-  cross-compilation). Toolchain mirrors the playbook's bootstrap task.
+- **Build image:** one image per Debian release (`debian-11` bullseye,
+  `debian-12` bookworm), selected via `make ... DISTRO=`, built natively per-arch
+  (no cross-compilation). Toolchain mirrors the playbook's bootstrap task.
+  Note: Debian 11 ships OpenSSL 1.1.1 (Debian 12 has 3.x).
 - **Packaging:** `dpkg-deb --build` with a hand-written `DEBIAN/control`
-  (via `write_deb_control` in `scripts/lib.sh`), mirroring the playbook.
+  (via `write_deb_control` in `scripts/lib.sh`), mirroring the playbook. Each
+  package version carries a `~<codename>` suffix (e.g. `-1~bullseye`), and debs
+  are staged under `build/out/<codename>/`.
 - **Signing:** `debsigs --sign=origin`, key from `GPG_PRIVATE_KEY`.
-- **Publishing:** `reprepro` pooled apt repo with `Architectures: amd64 arm64`,
-  deployed to the `gh-pages` branch.
+- **Publishing:** `reprepro` pooled apt repo with two distributions
+  (`bullseye` + `bookworm`), each `Architectures: amd64 arm64`; debs are routed
+  by codename. Deployed to the `gh-pages` branch.
 
 ## CI
 
 - `.github/workflows/build.yml` — matrix `{erlang,kazoo,freeswitch,kamailio} ×
-  {amd64,arm64}` on native runners (`ubuntu-24.04`, `ubuntu-24.04-arm`). On a
-  `v4.*` tag: build → sign → publish to gh-pages → GitHub Release. A
-  `workflow_dispatch` `publish=false` input runs a build-only dry-run.
+  {amd64,arm64} × {debian-11,debian-12}` (16 legs) on native runners
+  (`ubuntu-24.04`, `ubuntu-24.04-arm`). On a `v4.*` tag: build → sign → publish
+  to gh-pages → GitHub Release. A `workflow_dispatch` `publish=false` input runs
+  a build-only dry-run.
 - `.github/workflows/verify-install.yml` — installs from the published apt repo
-  in clean bookworm containers (both arches) and smoke-tests the artifacts.
+  in clean `debian:11`/`debian:12` containers (both arches, matching codename)
+  and smoke-tests the artifacts.
 
 ## Tests
 
