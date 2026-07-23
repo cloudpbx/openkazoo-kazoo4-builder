@@ -1,7 +1,29 @@
 # Project Status
 
-**Last updated:** 2026-07-22
-**Status:** scaffolding complete; first CI dry-run pending.
+**Last updated:** 2026-07-23
+**Status:** all 4 components build green on both distros (validated locally, arm64). amd64 legs pending CI.
+
+## Build validation (local, arm64)
+
+Every component was built end-to-end in the real Docker images on an arm64 host.
+All 8 debs produced and inspected:
+
+| Component | bookworm | bullseye | Notes |
+|---|---|---|---|
+| `erlang` | ✅ | ✅ | OTP 26.2.5.20; bullseye against OpenSSL 1.1.1w |
+| `kazoo` | ✅ | ✅ | rebar3 compile → release → deb, `Depends: erlang (>= 26)` |
+| `kamailio` | ✅ | ✅ | 153 modules incl. kazoo/rabbitmq/tls |
+| `freeswitch` | ✅ | ✅ | `mod_kazoo.so` + bundled sofia-sip/spandsp; video disabled (see below) |
+
+Six bugs were found and fixed during this validation (all would have failed CI):
+OTP-in-image (Erlang unavailable to kazoo/freeswitch), Go 1.15→1.22 pin
+(bullseye martini/secsipid needs `io/fs`), `libtool-bin` (FS bootstrap),
+`python3-distutils` (FS configure), kamailio `/usr/lib64` module path (+ gate),
+and FreeSWITCH `--disable-libvpx/--disable-libyuv` (bundled libvpx unbuildable on
+arm64; video not needed for `mod_kazoo`).
+
+**amd64** builds were not run locally (arm64 host; emulation too slow) — they run
+natively in CI.
 
 ## Scope
 
@@ -44,17 +66,19 @@ published to a GitHub Pages apt repo. Build recipe ported from the
    git push origin "v4.4.0-$(date -u +%Y%m%d)-1"
    ```
 
+## Deliberate scope decisions
+
+- **FreeSWITCH ships without VP8/VP9 video** (`--disable-libvpx --disable-libyuv`).
+  `mod_kazoo` is SIP/media only, and bundled libvpx cannot build on arm64. Audio
+  telephony is unaffected. Re-enable video later as a feature (needs an arm64
+  libvpx fix) if conferencing video is required.
+
 ## Open risks
 
 - **Repo is private** → confirm arm64 runner + GitHub Pages billing, or make the
   repo public (kazoo5-builder is public).
-- **arm64 FreeSWITCH / sofia-sip / spandsp** are unproven — the playbook is
-  amd64-only. Expect the `freeswitch × arm64` leg to need the most iteration.
-- **Debian 11 (bullseye) is unproven** — the playbook targets Debian 12. Bullseye
-  ships OpenSSL 1.1.1 (not 3.x) and older `-dev` libs; OTP 26 builds against
-  1.1.1, but the `freeswitch`/`kamailio` bullseye legs may need shake-out. The
-  toolchain list is identical to bookworm's; any package/ABI diffs surface in CI.
-- **First green will take several dry-runs** (kazoo5-builder took 11); the matrix
-  is now 16 legs.
-- The build image and full compilation are validated only in CI (local runs
-  cover the bats logic units, not the multi-hour builds).
+- **amd64 not yet built** — all local validation was arm64 (host arch). The amd64
+  legs run natively in CI; the playbook already proved FreeSWITCH on amd64, so
+  risk is low, but the amd64 matrix still needs a green CI run.
+- **First green in CI** may still need iteration across the 16 legs; the six
+  build bugs found locally are already fixed on this branch.
