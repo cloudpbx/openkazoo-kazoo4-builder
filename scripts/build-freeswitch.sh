@@ -74,10 +74,18 @@ configure_modules "$B/freeswitch/modules.conf"
 
 # -D_GNU_SOURCE is REQUIRED: without it strdup is implicitly int-declared under
 # -std=c99 and truncates 64-bit pointers to 32 bits -> SEGV on module load.
+#
+# --disable-libvpx --disable-libyuv: skip the bundled VP8/VP9 video codecs. We
+# build only mod_kazoo (SIP/media event socket), which needs no video, and FS's
+# bundled libvpx fails to generate vpx_config.h on arm64 (its configure doesn't
+# handle aarch64 in this environment). Dropping video makes the build succeed
+# identically on amd64 + arm64. Re-enable later as a deliberate feature if
+# video conferencing is needed (would require an arm64 libvpx fix).
 export PATH="/usr/local/lib/erlang/bin:$PATH"
 ( cd "$B/freeswitch" \
   && ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc \
        --with-openssl --enable-core-odbc-support --with-modules=mod_kazoo \
+       --disable-libvpx --disable-libyuv \
   && make -j"$(nproc)" CFLAGS="-Wno-error -D_GNU_SOURCE" \
   && make install )
 [ -f /usr/lib/freeswitch/mod/mod_kazoo.so ] || die "mod_kazoo.so not built — ecallmgr would fail silently"
