@@ -15,3 +15,11 @@ setup() { load '../../scripts/lib.sh'; }
 @test "arch_normalize rejects unknown arch" {
   run arch_normalize sparc; [ "$status" -ne 0 ]
 }
+
+@test "codename_for maps debian-11 to bullseye and debian-12 to bookworm" {
+  run codename_for debian-11; [ "$status" -eq 0 ]; [ "$output" = "bullseye" ]
+  run codename_for debian-12; [ "$status" -eq 0 ]; [ "$output" = "bookworm" ]
+}
+@test "codename_for rejects unknown distro" {
+  run codename_for debian-99; [ "$status" -ne 0 ]
+}
