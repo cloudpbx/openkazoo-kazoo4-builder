@@ -4,18 +4,33 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-# Disable SignalWire/FFmpeg4-incompatible modules; ensure mod_kazoo enabled.
+# modules.conf is the source of truth for what `make` builds (FS ignores the
+# configure --with-modules flag in this tree — verified: the full default set,
+# incl. mod_sofia, builds regardless). So we EDIT modules.conf: disable the
+# incompatible modules and enable the ones we require. mod_opus is on by default
+# but is listed here so the required set is explicit and self-documenting.
+FS_ENABLE_MODULES=(
+  event_handlers/mod_kazoo      # Kazoo ecallmgr integration (required)
+  codecs/mod_opus               # OPUS codec
+  applications/mod_http_cache   # HTTP media cache (http_cache:// URLs)
+  formats/mod_shout             # MP3 playback/streaming (libmpg123/libshout)
+)
+
+# Disable SignalWire/FFmpeg4-incompatible modules, then enable each required
+# module (uncommenting it, or appending if absent).
 # Portable across GNU/BSD sed: no `sed -i`; write to .new then mv.
 configure_modules() {
-  local f="$1" out="$1.new"
+  local f="$1" out="$1.new" m
   sed -E 's,^(endpoints/mod_verto|applications/mod_signalwire|applications/mod_av|applications/mod_spandsp)$,#\1,' "$f" > "$out"
   mv "$out" "$f"
-  if grep -qE '^#?event_handlers/mod_kazoo' "$f"; then
-    sed -E 's,^#?event_handlers/mod_kazoo.*,event_handlers/mod_kazoo,' "$f" > "$out"
-    mv "$out" "$f"
-  else
-    echo 'event_handlers/mod_kazoo' >> "$f"
-  fi
+  for m in "${FS_ENABLE_MODULES[@]}"; do
+    if grep -qE "^#?${m}$" "$f"; then
+      sed -E "s,^#?${m}$,${m}," "$f" > "$out"
+      mv "$out" "$f"
+    else
+      echo "$m" >> "$f"
+    fi
+  done
 }
 
 # FS 1.10.9's bundled mod_kazoo decodes the $gen_call reply tag with
@@ -81,14 +96,21 @@ configure_modules "$B/freeswitch/modules.conf"
 # FS's bundled libvpx failing to generate vpx_config.h on arm64, so the build
 # succeeds identically on amd64 + arm64. Re-enabling video is a deliberate
 # future feature (and would require an arm64 libvpx fix).
+# Module selection is driven entirely by modules.conf (edited by
+# configure_modules above); FS ignores configure --with-modules in this tree.
 export PATH="/usr/local/lib/erlang/bin:$PATH"
 ( cd "$B/freeswitch" \
   && ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc \
-       --with-openssl --enable-core-odbc-support --with-modules=mod_kazoo \
+       --with-openssl --enable-core-odbc-support \
        --disable-libvpx --disable-libyuv \
   && make -j"$(nproc)" CFLAGS="-Wno-error -D_GNU_SOURCE" \
   && make install )
-[ -f /usr/lib/freeswitch/mod/mod_kazoo.so ] || die "mod_kazoo.so not built — ecallmgr would fail silently"
+# Gate: every requested module must have produced a .so (mod_kazoo missing =
+# silent ecallmgr failure; the media modules are the point of this build).
+for _m in mod_kazoo mod_opus mod_http_cache mod_shout; do
+  [ -f "/usr/lib/freeswitch/mod/${_m}.so" ] \
+    || die "${_m}.so not built — check FreeSWITCH module deps/config"
+done
 
 echo ">> Packaging freeswitch deb: $DEB"
 STAGE="$B/freeswitch-deb"; rm -rf "$STAGE"
@@ -108,7 +130,7 @@ printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postinst"
 printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postrm"
 chmod 755 "$STAGE/DEBIAN/postinst" "$STAGE/DEBIAN/postrm"
 write_deb_control "$STAGE" freeswitch "$VER" "$ARCH" \
-  "FreeSWITCH ${FREESWITCH_VERSION} with mod_kazoo (OTP 24+ alias-tag fix)"
+  "FreeSWITCH ${FREESWITCH_VERSION} with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), and HTTP cache"
 dpkg-deb --build "$STAGE" "$DEB"
 rm -rf "$STAGE"
 echo ">> Done: $DEB"; ls -la "$DEB"

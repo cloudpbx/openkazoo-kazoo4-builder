@@ -11,7 +11,17 @@ playbook; the repository layout follows `openkazoo-kazoo5-builder`.
 |---|---|---|---|
 | `erlang` | 26.2.5.20 | `erlang/otp` (via kerl) | OTP 26 is the floor **and** ceiling — see below |
 | `kazoo` | 4.4 | `cloudpbx/openkazoo@4.4` | `rebar3 compile && rebar3 tar` (default profile), `include_erts=false` |
-| `freeswitch` | 1.10.9 | `signalwire/freeswitch` | + sofia-sip 1.13.17 & spandsp (source); `mod_kazoo` overlaid from `openkazoo/freeswitch-mod_kazoo@4.4`; **no video** (`--disable-libvpx/--disable-libyuv`, see DECISIONS.md D-01) |
+| `freeswitch` | 1.10.9 | `signalwire/freeswitch` | Full default module set (incl. `mod_sofia`) plus `mod_kazoo` (overlaid from `openkazoo/freeswitch-mod_kazoo@4.4`), `mod_opus` (OPUS), `mod_shout` (MP3), `mod_http_cache`. + sofia-sip 1.13.17 & spandsp from source. **No video** (`--disable-libvpx/--disable-libyuv`, see DECISIONS.md D-01). |
+
+### FreeSWITCH module selection
+
+The build set is controlled by `modules.conf` (FreeSWITCH ignores configure's
+`--with-modules` in this tree). `scripts/build-freeswitch.sh` → `configure_modules`
+disables the SignalWire/FFmpeg-incompatible modules (`mod_verto`,
+`mod_signalwire`, `mod_av`, `mod_spandsp`) and enables the required set
+(`mod_kazoo`, `mod_opus`, `mod_http_cache`, `mod_shout`); the rest of the FS
+default set (mod_sofia, dptools, conference, voicemail, …) builds as usual. Each
+required `.so` is gated after `make install` — a missing one fails the build.
 | `kamailio` | 5.8.8 | `kamailio/kamailio` | modules `db_mysql db_postgres tls kazoo rabbitmq` |
 
 ### The OTP-26 ceiling
