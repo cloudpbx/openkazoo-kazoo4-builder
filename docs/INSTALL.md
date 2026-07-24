@@ -26,7 +26,7 @@ sudo apt-get install -y kazoo freeswitch kamailio
 |---|---|---|
 | `erlang` | Erlang/OTP 26.2.5.20 (built via kerl) | `/usr/local/lib/erlang` |
 | `kazoo` | Kazoo 4.4 release (ERTS not bundled — uses the `erlang` package) | `/opt/kazoo` |
-| `freeswitch` | FreeSWITCH 1.10.9 + `mod_kazoo` | `/usr/bin/freeswitch`, `/usr/lib/freeswitch/mod` |
+| `freeswitch` | FreeSWITCH 1.10.9 + `mod_kazoo`, OPUS, MP3 (`mod_shout`), HTTP cache | `/usr/bin/freeswitch`, `/usr/lib/freeswitch/mod` |
 | `kamailio` | Kamailio 5.8.8 (db_mysql db_postgres tls kazoo rabbitmq) | `/usr/sbin/kamailio` |
 
 ## Notes
