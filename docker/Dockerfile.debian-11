@@ -1,8 +1,14 @@
 # syntax=docker/dockerfile:1.6
-# Build image for Kazoo 4.4 stack .deb packages (Debian 12 / bookworm).
+# Build image for Kazoo 4.4 stack .deb packages (Debian 11 / bullseye).
 # Built natively per-arch (amd64 or arm64) — no cross-compilation.
-# Toolchain mirrors kazoo-deploy build-packages.yml `bootstrap` task.
-FROM debian:12
+# Toolchain mirrors docker/Dockerfile.debian-12 (and the kazoo-deploy
+# build-packages.yml `bootstrap` task).
+#
+# NOTE: Debian 11 ships OpenSSL 1.1.1 (Debian 12 has 3.x). OTP 26.2.5.20 builds
+# fine against 1.1.1, and sofia-sip/spandsp are built from source regardless, so
+# the toolchain list is intentionally identical to bookworm's. Any bullseye-only
+# package or ABI differences are expected to surface in the first CI dry-runs.
+FROM debian:11
 
 ARG OTP_VERSION=26.2.5.20
 ARG REBAR_VERSION=3.27.0
@@ -55,7 +61,7 @@ RUN curl -fsSL --retry 5 --retry-all-errors \
 # (mod_kazoo ei headers) run in their own fresh `docker run --rm` containers and
 # need `erl`/`escript` on PATH — rebar3 is itself an escript and cannot start
 # without Erlang. build-erlang.sh then just packages this tree into the deb.
-# Builds against the base image's system OpenSSL (3.x on bookworm).
+# Builds against the base image's system OpenSSL (1.1.1 on bullseye).
 RUN set -eux \
  && export KERL_BUILD_BACKEND=git \
  && export KERL_CONFIGURE_OPTIONS="--without-javac --without-wx --without-debugger \

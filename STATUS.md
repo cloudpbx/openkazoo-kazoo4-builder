@@ -1,23 +1,46 @@
 # Project Status
 
-**Last updated:** 2026-07-22
-**Status:** scaffolding complete; first CI dry-run pending.
+**Last updated:** 2026-07-23
+**Status:** all 4 components build green on both distros (validated locally, arm64). amd64 legs pending CI.
+
+## Build validation (local, arm64)
+
+Every component was built end-to-end in the real Docker images on an arm64 host.
+All 8 debs produced and inspected:
+
+| Component | bookworm | bullseye | Notes |
+|---|---|---|---|
+| `erlang` | ✅ | ✅ | OTP 26.2.5.20; bullseye against OpenSSL 1.1.1w |
+| `kazoo` | ✅ | ✅ | rebar3 compile → release → deb, `Depends: erlang (>= 26)` |
+| `kamailio` | ✅ | ✅ | 153 modules incl. kazoo/rabbitmq/tls |
+| `freeswitch` | ✅ | ✅ | `mod_kazoo.so` + bundled sofia-sip/spandsp; video disabled (see below) |
+
+Six bugs were found and fixed during this validation (all would have failed CI):
+OTP-in-image (Erlang unavailable to kazoo/freeswitch), Go 1.15→1.22 pin
+(bullseye martini/secsipid needs `io/fs`), `libtool-bin` (FS bootstrap),
+`python3-distutils` (FS configure), kamailio `/usr/lib64` module path (+ gate),
+and FreeSWITCH `--disable-libvpx/--disable-libyuv` (bundled libvpx unbuildable on
+arm64; video not needed for `mod_kazoo`).
+
+**amd64** builds were not run locally (arm64 host; emulation too slow) — they run
+natively in CI.
 
 ## Scope
 
 Full Kazoo 4.4 stack (`erlang`, `kazoo`, `freeswitch`, `kamailio`) as signed
-Debian 12 `.deb`s for **amd64 + arm64**, published to a GitHub Pages apt repo.
-Build recipe ported from the `kazoo-deploy` `build-packages.yml` playbook;
-structure from `openkazoo-kazoo5-builder`.
+`.deb`s for **Debian 11 (bullseye) + Debian 12 (bookworm)**, **amd64 + arm64**,
+published to a GitHub Pages apt repo. Build recipe ported from the
+`kazoo-deploy` `build-packages.yml` playbook; structure from
+`openkazoo-kazoo5-builder`.
 
 ## What's implemented
 
-- `config/` version pins, `Makefile`, MIT `LICENSE`.
-- Debian 12 build image (`docker/Dockerfile.debian-12`): kerl, rebar3, full toolchain.
-- Four component build scripts (`scripts/build-{erlang,kazoo,freeswitch,kamailio}.sh`).
-- `scripts/sign.sh` (debsigs) and `scripts/publish.sh` (reprepro, multi-arch apt repo).
-- CI: `.github/workflows/build.yml` (matrix `component × arch`) + `verify-install.yml`.
-- 13 bats unit tests (pure-logic units), all green locally.
+- `config/` version pins, `Makefile` (with `DISTRO` selector), MIT `LICENSE`.
+- Debian 11 + Debian 12 build images (`docker/Dockerfile.debian-11`, `docker/Dockerfile.debian-12`): kerl, rebar3, full toolchain.
+- Four component build scripts (`scripts/build-{erlang,kazoo,freeswitch,kamailio}.sh`), distro-parameterized (`~<codename>` version suffix, `build/out/<codename>/`).
+- `scripts/sign.sh` (debsigs) and `scripts/publish.sh` (reprepro, two suites: bullseye + bookworm, multi-arch).
+- CI: `.github/workflows/build.yml` (matrix `component × arch × distro`, 16 legs) + `verify-install.yml` (arch × distro).
+- 15 bats unit tests (pure-logic units), all green locally.
 - Docs: README, INSTALL, ARCHITECTURE, CONTRIBUTING, GPG-KEY.
 
 ## Key constraints
@@ -35,7 +58,7 @@ structure from `openkazoo-kazoo5-builder`.
 1. Maintainer sets `GPG_PRIVATE_KEY` (+ optional `GPG_PASSPHRASE`) — see
    `docs/GPG-KEY.md`.
 2. Run the `build` workflow with `publish=false` (Actions → build → Run
-   workflow) and iterate until all 8 matrix legs are green. Document each fix in
+   workflow) and iterate until all 16 matrix legs are green. Document each fix in
    its own commit.
 3. Tag to publish:
    ```bash
@@ -43,12 +66,23 @@ structure from `openkazoo-kazoo5-builder`.
    git push origin "v4.4.0-$(date -u +%Y%m%d)-1"
    ```
 
+## Deliberate scope decisions
+
+- **No video support (by design).** We do not intend to support video at this
+  time. FreeSWITCH is therefore built with `--disable-libvpx --disable-libyuv`
+  (no VP8/VP9 codecs). This is a product decision, not merely a build workaround
+  — though it also sidesteps the fact that FreeSWITCH's bundled libvpx cannot
+  build on arm64. `mod_kazoo` is SIP/media only; audio telephony (calls, media
+  proxy, IVR, voicemail, fax) is unaffected. If video is ever required it would
+  be a deliberate future feature (and would need an arm64 libvpx fix). See
+  `docs/DECISIONS.md`.
+
 ## Open risks
 
 - **Repo is private** → confirm arm64 runner + GitHub Pages billing, or make the
   repo public (kazoo5-builder is public).
-- **arm64 FreeSWITCH / sofia-sip / spandsp** are unproven — the playbook is
-  amd64-only. Expect the `freeswitch × arm64` leg to need the most iteration.
-- **First green will take several dry-runs** (kazoo5-builder took 11).
-- The build image and full compilation are validated only in CI (local runs
-  cover the bats logic units, not the multi-hour builds).
+- **amd64 not yet built** — all local validation was arm64 (host arch). The amd64
+  legs run natively in CI; the playbook already proved FreeSWITCH on amd64, so
+  risk is low, but the amd64 matrix still needs a green CI run.
+- **First green in CI** may still need iteration across the 16 legs; the six
+  build bugs found locally are already fixed on this branch.

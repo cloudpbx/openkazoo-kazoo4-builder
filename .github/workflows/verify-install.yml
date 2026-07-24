@@ -12,8 +12,11 @@ jobs:
       fail-fast: false
       matrix:
         arch: [amd64, arm64]
+        distro: [debian-11, debian-12]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
-    container: debian:12
+    container: debian:${{ matrix.distro == 'debian-11' && '11' || '12' }}
+    env:
+      CODENAME: ${{ matrix.distro == 'debian-11' && 'bullseye' || 'bookworm' }}
     steps:
       - name: Add repo + install
         run: |
@@ -22,7 +25,7 @@ jobs:
           curl -fsSL https://cloudpbx.github.io/openkazoo-kazoo4-builder/pubkey.asc \
             | tee /usr/share/keyrings/openkazoo.asc > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/openkazoo.asc] \
-            https://cloudpbx.github.io/openkazoo-kazoo4-builder bookworm main" \
+            https://cloudpbx.github.io/openkazoo-kazoo4-builder ${CODENAME} main" \
             > /etc/apt/sources.list.d/openkazoo.list
           apt-get update
           apt-get install -y kazoo freeswitch kamailio

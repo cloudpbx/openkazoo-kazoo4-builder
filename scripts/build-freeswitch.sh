@@ -28,9 +28,11 @@ assert_mod_kazoo_fix() {
 
 [ "${1:-}" = "--lib-only" ] && return 0
 
-ROOT="$(repo_root)"; OUT="$ROOT/build/out"; B="$ROOT/build"
+ROOT="$(repo_root)"; B="$ROOT/build"
+CODENAME="$(codename_for "${DISTRO:?}")"
+OUT="$ROOT/build/out/$CODENAME"
 ARCH="$(arch_normalize "$(uname -m)")"
-VER="${FREESWITCH_VERSION:?}-${PKG_REVISION:?}"
+VER="${FREESWITCH_VERSION:?}-${PKG_REVISION:?}~${CODENAME}"
 DEB="$OUT/freeswitch_${VER}_${ARCH}.deb"
 mkdir -p "$OUT"
 [ -f "$DEB" ] && { echo ">> $DEB exists — skipping"; exit 0; }
@@ -72,10 +74,18 @@ configure_modules "$B/freeswitch/modules.conf"
 
 # -D_GNU_SOURCE is REQUIRED: without it strdup is implicitly int-declared under
 # -std=c99 and truncates 64-bit pointers to 32 bits -> SEGV on module load.
+#
+# --disable-libvpx --disable-libyuv: no video support, by design (see
+# docs/DECISIONS.md D-01). We do not intend to support video at this time, and
+# mod_kazoo (SIP/media event socket) needs no video codecs. This also sidesteps
+# FS's bundled libvpx failing to generate vpx_config.h on arm64, so the build
+# succeeds identically on amd64 + arm64. Re-enabling video is a deliberate
+# future feature (and would require an arm64 libvpx fix).
 export PATH="/usr/local/lib/erlang/bin:$PATH"
 ( cd "$B/freeswitch" \
   && ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc \
        --with-openssl --enable-core-odbc-support --with-modules=mod_kazoo \
+       --disable-libvpx --disable-libyuv \
   && make -j"$(nproc)" CFLAGS="-Wno-error -D_GNU_SOURCE" \
   && make install )
 [ -f /usr/lib/freeswitch/mod/mod_kazoo.so ] || die "mod_kazoo.so not built — ecallmgr would fail silently"

@@ -19,13 +19,14 @@ jobs:
       matrix:
         component: [erlang, kazoo, freeswitch, kamailio]
         arch: [amd64, arm64]
+        distro: [debian-11, debian-12]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Build ${{ matrix.component }} (${{ matrix.arch }})
-        run: make build COMPONENT=${{ matrix.component }}
+      - name: Build ${{ matrix.component }} (${{ matrix.distro }}/${{ matrix.arch }})
+        run: make build COMPONENT=${{ matrix.component }} DISTRO=${{ matrix.distro }}
       - name: Sign
         if: ${{ inputs.publish || startsWith(github.ref, 'refs/tags/') }}
         env:
@@ -34,11 +35,12 @@ jobs:
         run: |
           docker run --rm -v "$PWD":/work \
             -e GPG_PRIVATE_KEY -e GPG_PASSPHRASE \
-            openkazoo-kazoo4-builder:debian-12 /work/scripts/sign.sh
+            openkazoo-kazoo4-builder:${{ matrix.distro }} /work/scripts/sign.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: deb-${{ matrix.component }}-${{ matrix.arch }}
-          path: build/out/*.deb
+          name: deb-${{ matrix.component }}-${{ matrix.distro }}-${{ matrix.arch }}
+          # keep the build/out/<codename>/ layout so publish can route by codename
+          path: build/out
 
   publish:
     needs: build
@@ -51,11 +53,16 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: _artifacts
-      - name: Collect debs into build/out/
+      - name: Collect debs into build/out/<codename>/
         run: |
-          mkdir -p build/out
-          find _artifacts -name '*.deb' -exec cp {} build/out/ \;
-          ls -la build/out
+          # Each artifact preserves its build/out/<codename>/ layout; the deb's
+          # parent dir is its codename, so route each file back by that name.
+          find _artifacts -name '*.deb' | while read -r f; do
+            cn="$(basename "$(dirname "$f")")"
+            mkdir -p "build/out/$cn"
+            cp "$f" "build/out/$cn/"
+          done
+          find build/out -type f -name '*.deb' | sort
       - name: Assemble apt repo
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -74,4 +81,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/out/*.deb
+          files: build/out/*/*.deb
