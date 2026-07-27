@@ -5,4 +5,7 @@ setup() { load '../../scripts/lib.sh'; TMP="$BATS_TEST_TMPDIR"; }
   grep -q '^Package: erlang$'        "$TMP/DEBIAN/control"
   grep -q '^Version: 26.2.5.20-1$'   "$TMP/DEBIAN/control"
   grep -q '^Architecture: amd64$'    "$TMP/DEBIAN/control"
+  # reprepro requires a Section (else "No section given" on includedeb)
+  grep -q '^Section: comm$'          "$TMP/DEBIAN/control"
+  grep -q '^Priority: optional$'     "$TMP/DEBIAN/control"
 }
