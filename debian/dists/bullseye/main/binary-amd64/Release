@@ -1,0 +1,6 @@
+Archive: stable
+Component: main
+Origin: openkazoo
+Label: openkazoo-kazoo4-builder
+Architecture: amd64
+Description: Community-built Kazoo 4.4 stack for Debian bullseye

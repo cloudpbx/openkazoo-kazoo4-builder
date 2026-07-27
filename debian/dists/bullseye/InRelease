@@ -1,0 +1,43 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: openkazoo
+Label: openkazoo-kazoo4-builder
+Suite: stable
+Codename: bullseye
+Date: Mon, 27 Jul 2026 16:35:27 UTC
+Architectures: amd64 arm64
+Components: main
+Description: Community-built Kazoo 4.4 stack for Debian bullseye
+MD5Sum:
+ 98eea8fe73081f5dbb3a960e1f553ebb 2021 main/binary-amd64/Packages
+ 309684ff5bbb6b3a379504e04967c503 941 main/binary-amd64/Packages.gz
+ b803ca246d812d24f9ebc5f6f0bfe7ec 167 main/binary-amd64/Release
+ fa3b217540dc5fd19d5ba0b3da832109 2020 main/binary-arm64/Packages
+ 5ee67630b97e63dc3a1ef0ff586ccb11 936 main/binary-arm64/Packages.gz
+ d44e2fefa654445412ab1301597e75e1 167 main/binary-arm64/Release
+SHA1:
+ 8fa3644f0e939329e914ddfedef993d48369633c 2021 main/binary-amd64/Packages
+ b30768536fdeca1584061914ef4464b59ef0e4b5 941 main/binary-amd64/Packages.gz
+ 32d5c85392ff11f58e0dc5b12cd5c45e8ae1df51 167 main/binary-amd64/Release
+ a52bbc30374cd2b426c9b3f09423d3492e0dbd27 2020 main/binary-arm64/Packages
+ ce5bcdcd541cc50b4ab76b7b9e658be530edc345 936 main/binary-arm64/Packages.gz
+ fd8035beb198b347895ce6b8a949f95c610a5b81 167 main/binary-arm64/Release
+SHA256:
+ 2fe02cdf82d3b3d7438ea844589709cdc40e224a80f21885f1043d36d987ccef 2021 main/binary-amd64/Packages
+ e64fb7118e0bd74e2af7551dd081167d36df4b59d50ae553063db10d7179f4c4 941 main/binary-amd64/Packages.gz
+ f28a1cb7545edaed7650cce503597ecbfcfe9c7d8329683c1752334f1c0aea3c 167 main/binary-amd64/Release
+ 3b0d3ba120c8d9409d9cdcf8e9df50f8681ec235bdc07f08f7e22a4f41995b3a 2020 main/binary-arm64/Packages
+ 81a9728fe43c22c838819ce204b269c1c9ba0ac0b92ab409e3eeea1403722ce3 936 main/binary-arm64/Packages.gz
+ 9f695b1913debc25c64bff0f3a20f486c78102f1a4c98a9953e17fb1f827d05c 167 main/binary-arm64/Release
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCgAdFiEEJLYPSUiC2AwwgkxktWRDVgsLf+sFAmpniM8ACgkQtWRDVgsL
+f+uk5AgA6zuQC5e4mN3ugHf8g7QBpR1abNtwNWPsMZlVvkFkOuZB1dm7/JROLhVk
+xUVpD5Y+72p+fJyEoVLQuVj6DZoQmZCpMXucDekZxAAvkcmji7LShVYfoMXWclvi
+zK+aQ156u8r9+tu3s9362cYbUAPM5gmzNR8RI5O2ISIhArhETQdio4PcmuKmhKY/
+rD5sFKFA5G54kuIqmhNj6K9NjugmK7wcpmrla2wuwupA/7wI+RditG/EQ0o35/X6
+xdpVhvuZOTPSDE7MNkphitzx3aWTIPjGe8SoBNY98SHT9HgCQxlfQfoqTom4Ap8/
+gduA2i/B8+ViV6xgFVOE62frIrxWjw==
+=ssa9
+-----END PGP SIGNATURE-----

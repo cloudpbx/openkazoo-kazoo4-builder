@@ -1,0 +1,53 @@
+Package: erlang
+Version: 26.2.5.20-1~bullseye
+Architecture: amd64
+Maintainer: openkazoo build <build@cloudpbx.example>
+Priority: optional
+Section: comm
+Filename: pool/main/e/erlang/erlang_26.2.5.20-1~bullseye_amd64.deb
+Size: 41405934
+SHA256: 3a24c3bef85799ac0832e328f291b03ed66cef6ad41860df28ef34c82835b8d6
+SHA1: a4f1db0daa44da9d23950d9af231f845237c8f0c
+MD5sum: 40abafc539c8efabfac33e60b4faab4d
+Description: Erlang/OTP 26.2.5.20 built via kerl for Kazoo 4.4 (system OpenSSL, no wx/javac)
+
+Package: freeswitch
+Version: 1.10.9-1~bullseye
+Architecture: amd64
+Maintainer: openkazoo build <build@cloudpbx.example>
+Priority: optional
+Section: comm
+Filename: pool/main/f/freeswitch/freeswitch_1.10.9-1~bullseye_amd64.deb
+Size: 5773962
+SHA256: 11442272f6a9d6cf04d7325bfe71bd975d73671ce42abf6bc9c9428db0935d29
+SHA1: d2b0b9c0d660dcf00cbfb34d0788cc381c5f0a79
+MD5sum: e46b7466e689002b0dffa69317d41ae4
+Description: FreeSWITCH 1.10.9 with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), and HTTP cache
+
+Package: kamailio
+Version: 5.8.8-1~bullseye
+Architecture: amd64
+Maintainer: openkazoo build <build@cloudpbx.example>
+Priority: optional
+Section: comm
+Filename: pool/main/k/kamailio/kamailio_5.8.8-1~bullseye_amd64.deb
+Size: 10869310
+SHA256: a8179262183661147092e8817cd4d8d67d361b87bcc7fdbd3c2fa994a0ce58f3
+SHA1: 7ea41134131efe9b0e66cdb6a20e9f553bac0d59
+MD5sum: 6708c6f6f9d0cfd17d885a1679e7b1f8
+Description: Kamailio 5.8.8 SIP proxy (db_mysql db_postgres tls kazoo rabbitmq)
+
+Package: kazoo
+Version: 4.4.0~4.4.20260727.25d9a43e-1~bullseye
+Architecture: amd64
+Maintainer: openkazoo build <build@cloudpbx.example>
+Depends: erlang (>= 26)
+Priority: optional
+Section: comm
+Filename: pool/main/k/kazoo/kazoo_4.4.0~4.4.20260727.25d9a43e-1~bullseye_amd64.deb
+Size: 59407886
+SHA256: 9599f3ba4d205e44323d4d1ea2e3c6fdc14f1d32d07ed0ea919c6e24a51cce14
+SHA1: f41d9c706d97bd9080dbe5ac7243d379e9fc2a20
+MD5sum: bb2c3a9d4c7ea7110800c0af29faee21
+Description: Kazoo 4.4 UCaaS platform (built against Erlang/OTP 26.2.5.20, include_erts=false)
+

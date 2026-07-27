@@ -1,0 +1,18 @@
+Origin: openkazoo
+Label: openkazoo-kazoo4-builder
+Suite: stable
+Codename: bullseye
+Architectures: amd64 arm64
+Components: main
+Description: Community-built Kazoo 4.4 stack for Debian bullseye
+SignWith: 24B60F494882D80C30824C64B56443560B0B7FEB
+
+Origin: openkazoo
+Label: openkazoo-kazoo4-builder
+Suite: stable
+Codename: bookworm
+Architectures: amd64 arm64
+Components: main
+Description: Community-built Kazoo 4.4 stack for Debian bookworm
+SignWith: 24B60F494882D80C30824C64B56443560B0B7FEB
+

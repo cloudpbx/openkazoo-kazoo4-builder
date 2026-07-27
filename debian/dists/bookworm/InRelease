@@ -1,0 +1,43 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: openkazoo
+Label: openkazoo-kazoo4-builder
+Suite: stable
+Codename: bookworm
+Date: Mon, 27 Jul 2026 16:35:29 UTC
+Architectures: amd64 arm64
+Components: main
+Description: Community-built Kazoo 4.4 stack for Debian bookworm
+MD5Sum:
+ d6cf2d3ce8a289ff4439905b408ae9db 2021 main/binary-amd64/Packages
+ f924833d6fd957c8b4bea8f4ab8e6c38 940 main/binary-amd64/Packages.gz
+ d3182a6fb9a687648b2ccaff18a54e80 167 main/binary-amd64/Release
+ 81f90104708f9071425465c2c0ef0734 2020 main/binary-arm64/Packages
+ 0b95cb6656ce139033062dd6135b8ed3 940 main/binary-arm64/Packages.gz
+ 0122a2fc87212c9c0f6ef7a806cf0175 167 main/binary-arm64/Release
+SHA1:
+ e44359f78475e9b84d6bdfcba683678c018764e2 2021 main/binary-amd64/Packages
+ 9ea1f40aefaacc4ce73d9c4e2aa5116912b77f50 940 main/binary-amd64/Packages.gz
+ 94a8e97f9197804b601074e003c4966d3af82e59 167 main/binary-amd64/Release
+ 567c754052776e5327328a586169ddd26ce4fa81 2020 main/binary-arm64/Packages
+ b49028729487012f5d8e7380d53c0a06f7be1efe 940 main/binary-arm64/Packages.gz
+ ef83b5339a713698fe3356aca682cd41c5da372f 167 main/binary-arm64/Release
+SHA256:
+ a2343fd450d70427df86a43a1dc876bb8802725cf0926da1e2ad835ac4a04290 2021 main/binary-amd64/Packages
+ dec3624c59ff2c81c560dccc9358ab479d11d75b64b79897706c33654c5fda2e 940 main/binary-amd64/Packages.gz
+ 8e73238f211d36a556b02852aa1b36a6e2a03e3931cf261993ff51ed38de6435 167 main/binary-amd64/Release
+ 3ffae5c2d59ae67d5a925eaf7d34fee26ed8996f9a696fa636a6ee21a4e3e6f9 2020 main/binary-arm64/Packages
+ eca00f11041fa563ca25ad7aa71016a17b45c4291ff5a10e0e471ef79b447141 940 main/binary-arm64/Packages.gz
+ 87354d4f4a7439060ba9f138139528bd827c9be736b2aad07ab76c91cbc8fc36 167 main/binary-arm64/Release
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCgAdFiEEJLYPSUiC2AwwgkxktWRDVgsLf+sFAmpniNEACgkQtWRDVgsL
+f+tnmQgAifCvFJeZ5Fmt+SKacfnN9BAOXkc9JOKZ/ZO1JbbLj99nxe49DFS+HVYh
+rY4cWpw3F14NtIC7jnSBPEGe6ju2rGCd4w31R230TeuS8XqdEHA4gsrT8tzj+jZq
+FwG2XruSK8G9rFmUjIkGTknY/6gBJyoX1QZtPr+6AJWYtbeWPyTWRekihVvUi7f2
+SI5Nn/1M3hNz4Ys98K9d3Xc8VOttwmbjnw/lruKLhWshRppFCZSQLqk3T41Kj4Rg
+S9YoVEbT14D9oGPjrKDIvpUSW1hxmfKBxNNazSC9d/cwGr6Iit/P1UEsh7jhvhCu
+OhTbWnYs5mSM5IsHYuSsJuD3Gf+jsA==
+=mgh+
+-----END PGP SIGNATURE-----
