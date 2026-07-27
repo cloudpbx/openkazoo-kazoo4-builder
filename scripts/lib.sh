@@ -32,6 +32,8 @@ write_deb_control() {
   {
     echo "Package: $pkg"
     echo "Version: $ver"
+    echo "Section: comm"
+    echo "Priority: optional"
     echo "Architecture: $arch"
     echo "Maintainer: openkazoo build <build@cloudpbx.example>"
     [ -n "$depends" ] && echo "Depends: $depends"

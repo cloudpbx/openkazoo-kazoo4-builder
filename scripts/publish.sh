@@ -57,7 +57,10 @@ for cn in "${DISTRO_CODENAMES[@]}"; do
   shopt -s nullglob; cdebs=("$OUT/$cn"/*.deb); shopt -u nullglob
   for deb in "${cdebs[@]}"; do
     echo ">> reprepro includedeb $cn: $deb"
-    reprepro -b "$APT" includedeb "$cn" "$deb"
+    # -S/-P provide a default section/priority if a deb's control lacks them,
+    # so includedeb never fails with "No section given" (the control now sets
+    # them, but this keeps publish robust to any future package).
+    reprepro -S comm -P optional -b "$APT" includedeb "$cn" "$deb"
   done
 done
 
