@@ -19,20 +19,35 @@ jobs:
       CODENAME: ${{ matrix.distro == 'debian-11' && 'bullseye' || 'bookworm' }}
     steps:
       - name: Add repo + install
+        shell: bash
         run: |
           set -euo pipefail
           apt-get update && apt-get install -y curl ca-certificates gnupg
           curl -fsSL https://cloudpbx.github.io/openkazoo-kazoo4-builder/pubkey.asc \
             | tee /usr/share/keyrings/openkazoo.asc > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/openkazoo.asc] \
-            https://cloudpbx.github.io/openkazoo-kazoo4-builder ${CODENAME} main" \
+            https://cloudpbx.github.io/openkazoo-kazoo4-builder/debian ${CODENAME} main" \
             > /etc/apt/sources.list.d/openkazoo.list
           apt-get update
           apt-get install -y kazoo freeswitch kamailio
       - name: Smoke-test artifacts present
+        shell: bash
         run: |
           set -euo pipefail
           test -d /opt/kazoo
           test -f /usr/lib/freeswitch/mod/mod_kazoo.so
           command -v kamailio
           /usr/local/lib/erlang/bin/erl -eval 'io:format("~s~n",[erlang:system_info(otp_release)]),halt().' -noshell | grep -q '^26'
+          # FreeSWITCH links spandsp 3.x — the deb must bundle it and FS must
+          # resolve all its libs (guards the multiarch bundle-glob regression).
+          test -e /usr/lib/libspandsp.so.3
+          ! ldd /usr/bin/freeswitch | grep -q 'not found'
+          # Kamailio modules kazoo-configs-kamailio loadmodule's must be shipped
+          # (guards the include_modules gap).
+          for m in websocket presence presence_xml outbound uuid; do
+            find /usr/lib64/kamailio /usr/lib/kamailio -name "$m.so" 2>/dev/null | grep -q . \
+              || { echo "missing kamailio module: $m.so"; exit 1; }
+          done
+          # postinst must create the kamailio service user/group.
+          getent passwd kamailio
+          getent group kamailio
