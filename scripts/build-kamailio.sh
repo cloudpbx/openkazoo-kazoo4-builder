@@ -20,7 +20,7 @@ git clone --depth 1 --branch "$KAMAILIO_VERSION" \
 
 echo ">> Building kamailio (~30 min)"
 ( cd "$B/kamailio" \
-  && make FLAVOUR=kamailio include_modules="db_mysql db_postgres tls kazoo rabbitmq" PREFIX=/usr cfg \
+  && make FLAVOUR=kamailio include_modules="db_mysql db_postgres tls kazoo rabbitmq presence presence_xml presence_dialoginfo presence_mwi websocket outbound uuid" PREFIX=/usr cfg \
   && make -j"$(nproc)" \
   && make install )
 
@@ -41,8 +41,64 @@ done
 # failures). Fail loudly rather than shipping a binary-only deb.
 find "$STAGE" -path '*kamailio*' -name '*.so' -print -quit | grep -q . \
   || die "no kamailio modules staged — check install LIBDIR (expected /usr/lib64/kamailio/modules)"
+
+# Gate: the presence/websocket/outbound module groups kazoo-configs-kamailio
+# loadmodule's must be present (they need include_modules + libxml2/libunistring).
+for m in websocket presence presence_xml outbound uuid; do
+  find "$STAGE" -path "*kamailio/modules/$m.so" -print -quit | grep -q . \
+    || die "kamailio module '$m' missing — check include_modules and build deps (libxml2-dev/libunistring-dev/uuid-dev)"
+done
+
+# systemd unit + service user. dpkg-deb builds from a staging tree with no
+# maintainer scripts, so — unlike Debian's kamailio package — nothing creates
+# the kamailio user/group or installs a unit. Ship both. The unit runs as the
+# kamailio user with CAP_NET_BIND_SERVICE so it can bind privileged SIP ports
+# (5060/5061) without root; deployers may drop in an override for ExecStart.
+mkdir -p "$STAGE/lib/systemd/system"
+cat > "$STAGE/lib/systemd/system/kamailio.service" <<'UNIT'
+[Unit]
+Description=Kamailio - the Open Source SIP Server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=forking
+User=kamailio
+Group=kamailio
+Environment='CFGFILE=/etc/kamailio/kamailio.cfg'
+Environment='SHM_MEMORY=64'
+Environment='PKG_MEMORY=8'
+EnvironmentFile=-/etc/default/kamailio
+PIDFile=/run/kamailio/kamailio.pid
+ExecStart=/usr/sbin/kamailio -P /run/kamailio/kamailio.pid -f $CFGFILE -m $SHM_MEMORY -M $PKG_MEMORY --atexit=no
+Restart=on-failure
+RuntimeDirectory=kamailio
+RuntimeDirectoryMode=0770
+AmbientCapabilities=CAP_CHOWN CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+mkdir -p "$STAGE/DEBIAN"
+cat > "$STAGE/DEBIAN/postinst" <<'POSTINST'
+#!/bin/sh
+set -e
+if ! getent group kamailio >/dev/null; then
+  addgroup --system kamailio
+fi
+if ! getent passwd kamailio >/dev/null; then
+  adduser --system --no-create-home --home /run/kamailio \
+    --ingroup kamailio --shell /usr/sbin/nologin kamailio
+fi
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload || true
+fi
+POSTINST
+chmod 0755 "$STAGE/DEBIAN/postinst"
+
 write_deb_control "$STAGE" kamailio "$VER" "$ARCH" \
-  "Kamailio ${KAMAILIO_VERSION} SIP proxy (db_mysql db_postgres tls kazoo rabbitmq)"
+  "Kamailio ${KAMAILIO_VERSION} SIP proxy (db_mysql db_postgres tls kazoo rabbitmq presence websocket outbound)"
 dpkg-deb --build "$STAGE" "$DEB"
 rm -rf "$STAGE"
 echo ">> Done: $DEB"; ls -la "$DEB"
