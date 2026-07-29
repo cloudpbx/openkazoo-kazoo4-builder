@@ -68,7 +68,12 @@ if ! grep -q 'SPANDSP_RELEASE_DATE_STRING' /usr/include/spandsp.h 2>/dev/null; t
   rm -rf "$B/spandsp"
   git clone https://github.com/freeswitch/spandsp.git "$B/spandsp"
   git -C "$B/spandsp" checkout "${SPANDSP_REF:?}"
-  ( cd "$B/spandsp" && ./autogen.sh && ./configure --prefix=/usr && make -j"$(nproc)" && make install )
+  # Force libdir to /usr/lib (not the multiarch /usr/lib/<triplet>): spandsp's
+  # autotools default to the multiarch libdir on bullseye, which the /usr/lib
+  # -maxdepth 1 bundle glob below would miss — shipping a FreeSWITCH deb whose
+  # libspandsp.so.3 is absent (FS then fails to start). sofia-sip already lands
+  # in /usr/lib, so this makes the two consistent.
+  ( cd "$B/spandsp" && ./autogen.sh && ./configure --prefix=/usr --libdir=/usr/lib && make -j"$(nproc)" && make install )
   ldconfig
 fi
 
