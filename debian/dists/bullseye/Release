@@ -2,28 +2,28 @@ Origin: openkazoo
 Label: openkazoo-kazoo4-builder
 Suite: stable
 Codename: bullseye
-Date: Thu, 30 Jul 2026 00:50:53 UTC
+Date: Thu, 30 Jul 2026 18:52:17 UTC
 Architectures: amd64 arm64
 Components: main
 Description: Community-built Kazoo 4.4 stack for Debian bullseye
 MD5Sum:
- d8200b5629e3419e7af44684b06fa13f 2049 main/binary-amd64/Packages
- 5618bb2acfba6aeeb5153842fb70c79c 960 main/binary-amd64/Packages.gz
+ d8ce5dd69304a79e6afee4c19f3a5bdf 2049 main/binary-amd64/Packages
+ 4f10c58e2f5f7088e6c486593e38983e 961 main/binary-amd64/Packages.gz
  b803ca246d812d24f9ebc5f6f0bfe7ec 167 main/binary-amd64/Release
- a6857cfdebd94b2083dd38e614a8d6f0 2048 main/binary-arm64/Packages
- 0d453aa9f92cd823c090cf45f3085728 958 main/binary-arm64/Packages.gz
+ d1525de30cce6ee8891df28dd6fd3d92 2048 main/binary-arm64/Packages
+ 6eaa0289b039837651f5d3c18dbe2070 957 main/binary-arm64/Packages.gz
  d44e2fefa654445412ab1301597e75e1 167 main/binary-arm64/Release
 SHA1:
- dbc7f926373ff0fdd303669946cdc8350d82dd53 2049 main/binary-amd64/Packages
- 4a8dd35624b5dea8afc13eadbbd8ff3705c8e852 960 main/binary-amd64/Packages.gz
+ d97cb190313a2e980dfe6e3805727ba06f2bcd08 2049 main/binary-amd64/Packages
+ defc17fc7de93493e9a82e3c9f5980117400c5d6 961 main/binary-amd64/Packages.gz
  32d5c85392ff11f58e0dc5b12cd5c45e8ae1df51 167 main/binary-amd64/Release
- c9cdc2d6c8509d01d690c36f891579c8645e175d 2048 main/binary-arm64/Packages
- 461189c76343a9ada7a4ef21c73f274d89b763a6 958 main/binary-arm64/Packages.gz
+ 662b55f7c29fc446272384096556a7b9cb36795b 2048 main/binary-arm64/Packages
+ e6349890604d49db87477959b71f401ae5afd73f 957 main/binary-arm64/Packages.gz
  fd8035beb198b347895ce6b8a949f95c610a5b81 167 main/binary-arm64/Release
 SHA256:
- c87fbba7e66761a1327f65b0721d68dbaf5385d4fa811503a8dabcfb8efc2686 2049 main/binary-amd64/Packages
- 97744bf0cb9f5013368d260e056c8f4ee40b254116de57abaceafcbd4cb9d0a4 960 main/binary-amd64/Packages.gz
+ 3a6aa241baeb2699db8e4d3d0e74f77f654e53738a571c9c81242b50e968661a 2049 main/binary-amd64/Packages
+ 7cfd175b31c90132d81fa40b8497cd62c0c4924512df1f29b788459a6ffbb03f 961 main/binary-amd64/Packages.gz
  f28a1cb7545edaed7650cce503597ecbfcfe9c7d8329683c1752334f1c0aea3c 167 main/binary-amd64/Release
- f357641257aba747f852dcbffdf64739c78e3572adfa598f62c7f2ce15260917 2048 main/binary-arm64/Packages
- 7d861044a52f11bbcacc17f913d9524c8c522f61f057caf37b5258bc382f8f6c 958 main/binary-arm64/Packages.gz
+ 724501384031f39cfa98b0e65c1850283f7f7e4b4482fbad26cd5e09ca141131 2048 main/binary-arm64/Packages
+ 0d862a72c4eb8d66cae1947b0fb51554aafdd94ae911da56919e6f531b5753ea 957 main/binary-arm64/Packages.gz
  9f695b1913debc25c64bff0f3a20f486c78102f1a4c98a9953e17fb1f827d05c 167 main/binary-arm64/Release
