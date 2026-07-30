@@ -68,12 +68,9 @@ if ! grep -q 'SPANDSP_RELEASE_DATE_STRING' /usr/include/spandsp.h 2>/dev/null; t
   rm -rf "$B/spandsp"
   git clone https://github.com/freeswitch/spandsp.git "$B/spandsp"
   git -C "$B/spandsp" checkout "${SPANDSP_REF:?}"
-  # Force libdir to /usr/lib (not the multiarch /usr/lib/<triplet>): spandsp's
-  # autotools default to the multiarch libdir on bullseye, which the /usr/lib
-  # -maxdepth 1 bundle glob below would miss — shipping a FreeSWITCH deb whose
-  # libspandsp.so.3 is absent (FS then fails to start). sofia-sip already lands
-  # in /usr/lib, so this makes the two consistent.
-  ( cd "$B/spandsp" && ./autogen.sh && ./configure --prefix=/usr --libdir=/usr/lib && make -j"$(nproc)" && make install )
+  # spandsp installs to the multiarch libdir (/usr/lib/<triplet>) regardless of
+  # --libdir; the deb bundle step below searches there explicitly.
+  ( cd "$B/spandsp" && ./autogen.sh && ./configure --prefix=/usr && make -j"$(nproc)" && make install )
   ldconfig
 fi
 
@@ -127,8 +124,19 @@ find /usr/lib -maxdepth 1 -name 'libfreeswitch.so*' -exec cp -a {} "$STAGE/usr/l
 # against them, but Debian's packaged versions are too old (that is *why* we
 # built them from source), so apt cannot satisfy them on the target. Ship them
 # in the package or freeswitch fails to load at runtime on a clean host.
-find /usr/lib -maxdepth 1 \( -name 'libsofia-sip-ua.so*' -o -name 'libspandsp.so*' \) \
-  -exec cp -a {} "$STAGE/usr/lib/" \;
+# NOTE: search BOTH /usr/lib and the multiarch /usr/lib/<triplet> — spandsp's
+# autotools ignore ./configure --libdir and always install to the multiarch
+# libdir, so a bare `/usr/lib -maxdepth 1` glob silently drops libspandsp.so.3
+# (FreeSWITCH then dies at boot: "libspandsp.so.3: cannot open shared object").
+_MULTIARCH="$(gcc -dumpmachine 2>/dev/null || true)"
+for _libdir in /usr/lib ${_MULTIARCH:+/usr/lib/$_MULTIARCH}; do
+  [ -d "$_libdir" ] || continue
+  find "$_libdir" -maxdepth 1 \( -name 'libsofia-sip-ua.so*' -o -name 'libspandsp.so*' \) \
+    -exec cp -a {} "$STAGE/usr/lib/" \;
+done
+# Gate: libspandsp.so.3 MUST be bundled (FreeSWITCH links it) — fail loudly.
+ls "$STAGE"/usr/lib/libspandsp.so.3* >/dev/null 2>&1 \
+  || die "libspandsp.so.3 not bundled — check spandsp install libdir + bundle glob"
 [ -d /usr/lib/freeswitch ] && cp -a /usr/lib/freeswitch "$STAGE/usr/lib/"
 cp -a /etc/freeswitch/. "$STAGE/etc/freeswitch/" 2>/dev/null || true
 printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postinst"
