@@ -11,7 +11,7 @@ curl -fsSL https://cloudpbx.github.io/openkazoo-kazoo4-builder/pubkey.asc \
 
 . /etc/os-release   # sets $VERSION_CODENAME (bullseye or bookworm)
 echo "deb [signed-by=/usr/share/keyrings/openkazoo.asc] \
-https://cloudpbx.github.io/openkazoo-kazoo4-builder ${VERSION_CODENAME} main" \
+https://cloudpbx.github.io/openkazoo-kazoo4-builder/debian ${VERSION_CODENAME} main" \
   | sudo tee /etc/apt/sources.list.d/openkazoo.list
 
 sudo apt-get update
