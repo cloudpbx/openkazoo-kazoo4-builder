@@ -5,39 +5,39 @@ Origin: openkazoo
 Label: openkazoo-kazoo4-builder
 Suite: stable
 Codename: bookworm
-Date: Thu, 30 Jul 2026 18:52:18 UTC
+Date: Fri, 31 Jul 2026 04:56:25 UTC
 Architectures: amd64 arm64
 Components: main
 Description: Community-built Kazoo 4.4 stack for Debian bookworm
 MD5Sum:
- efa70866b8dff2878f197ff71865e47b 2049 main/binary-amd64/Packages
- 54baa4f5f8362a1be40ac483ca06a015 959 main/binary-amd64/Packages.gz
+ 60b97c4a44f3637882c43bb3dc467c01 2053 main/binary-amd64/Packages
+ fae1d4d7555400454d6395b62ac3aafe 961 main/binary-amd64/Packages.gz
  d3182a6fb9a687648b2ccaff18a54e80 167 main/binary-amd64/Release
- ee669b70c67455d3d7cbfd0e795f42b9 2048 main/binary-arm64/Packages
- ebc53379fc335ed9dd4fd32af911967b 958 main/binary-arm64/Packages.gz
+ edaa01d4e4888c3db1cb645418c2d80b 2052 main/binary-arm64/Packages
+ 3b2171160ceb6424a03863be57cc2d38 963 main/binary-arm64/Packages.gz
  0122a2fc87212c9c0f6ef7a806cf0175 167 main/binary-arm64/Release
 SHA1:
- 6ba5657dca71b6fe1dc74ee43cb69f4186bb6278 2049 main/binary-amd64/Packages
- 621a2c4bb3109bfd4b83ffd8f309e3c7d35815fa 959 main/binary-amd64/Packages.gz
+ 8edd87af7af044794f960d4525ed029cfb3d052e 2053 main/binary-amd64/Packages
+ e0516c805cf8a0a5b34a78c9164e0bc86cc8c65d 961 main/binary-amd64/Packages.gz
  94a8e97f9197804b601074e003c4966d3af82e59 167 main/binary-amd64/Release
- e8926c1fe1ac6792be317bc7fbfd17fa272ac599 2048 main/binary-arm64/Packages
- 74eee0c13e584372763e1de67d7f6f950f3eef6a 958 main/binary-arm64/Packages.gz
+ 53a50aacf39b4695fd14ac9c67446b17d28fdf40 2052 main/binary-arm64/Packages
+ 8bbc9785ce9d61b38a0b1a2d3372989bcfadc614 963 main/binary-arm64/Packages.gz
  ef83b5339a713698fe3356aca682cd41c5da372f 167 main/binary-arm64/Release
 SHA256:
- 0970702fd988636a153900c00f8dcefb389bc0ae46ceb19ef551281dc8750012 2049 main/binary-amd64/Packages
- 341f7f29207f71679908ad6827221bd5602878351669de50042a5b9f6fb75111 959 main/binary-amd64/Packages.gz
+ 9dbb071a2228a1930a79a8a3720b757b0c867eac6d00b3d102986826ab1b7cc2 2053 main/binary-amd64/Packages
+ fd145944ce18b2bbcb9b3842d9d4229e4c59d903f141d756a2af0ba24294be16 961 main/binary-amd64/Packages.gz
  8e73238f211d36a556b02852aa1b36a6e2a03e3931cf261993ff51ed38de6435 167 main/binary-amd64/Release
- 91b056171a97cfee58255c3c4a86db57effb286923c49d339763077fc3b464a5 2048 main/binary-arm64/Packages
- e6aec4dfaeccaa3d2439d68f554f9cfd249e88fed7f955d460bc2463bb767f2e 958 main/binary-arm64/Packages.gz
+ 9377739ef98a8809baf2be0cbd355b7aa0a7bffc3fe07f987a0ea2cd33308ce3 2052 main/binary-arm64/Packages
+ 33e17c6f81f92efd1006da2b6e66da99f8cd10c8c22831c3b6fd354187dbf7b2 963 main/binary-arm64/Packages.gz
  87354d4f4a7439060ba9f138139528bd827c9be736b2aad07ab76c91cbc8fc36 167 main/binary-arm64/Release
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCgAdFiEEJLYPSUiC2AwwgkxktWRDVgsLf+sFAmprnWMACgkQtWRDVgsL
-f+v56Qf+OC3m9/L7vvXzRS6r7n9DdhoAxE2oX602xuY6PiWqjEbGv0W15FC8di7G
-kj3XdyhqEsHkB2O31ZfFzr1XMZSMNVJKjM2vEDnqNiyXNa5tjd/FcS1n5OrBbg/y
-DGw834K1wvelymvO57smdtVa84ei+kDnQ1v63Q6p/gMu23ypqSNnXNg3ZNNgjGSh
-iuGTxw6pcQWBG1npS8ETsej/jIYQX2xIdt8vOWU5wR7qWOG99dTYbbxhfuKnRVkx
-2mzKsor6Lw5JaRpMVGCEwTwBMYLlNVFuJ0Q4ksxyhwgSNcKCFrJaizUn0BTvO+JR
-QxP14kglHeqMZ4LBCgkleNgwHh9Gaw==
-=q7IO
+iQEzBAEBCgAdFiEEJLYPSUiC2AwwgkxktWRDVgsLf+sFAmpsKvkACgkQtWRDVgsL
+f+v1bwf+O1pXwCPcxAI+eSOj7aA0LGJqHX/3KhjbZ7RT8b7omeXqNVD32g53AWfT
+CyypmlL3WSDjfcvYwTX+H3fcEKruIBDuZSqgpLBK8LBvCTSSUhj+EKOplGCiXIvr
+Rz+d1eFIPOC5nYQABJ3c2ZTyP/7S02axaEwymW8YjF049tP4+BcquY/9qhEOEp24
+JJSQ2ZfMPQh0UzhLkGVIqE6Zhwogq4Rd+5AZ8pc50IlCI7TCAW54HnbYFoS+LT2h
+9CU/cPsa6C7yzUEHfQXSKz6VRPH2pbHtwTJNnWoBbe6oQoONkwuQ7nT9JGAt6gp7
+Rb03iY9NmE5woANUhW97wpN0WNcVSg==
+=gBlX
 -----END PGP SIGNATURE-----
