@@ -70,7 +70,7 @@ rm -rf "$STAGE"; mkdir -p "$STAGE/opt/kazoo"
 tar -xzf "$TARBALL" -C "$STAGE/opt/kazoo"
 write_deb_control "$STAGE" kazoo "$PKG_VERSION" "$ARCH" \
   "Kazoo 4.4 UCaaS platform (built against Erlang/OTP ${OTP_VERSION}, include_erts=false)" \
-  "erlang (>= ${OTP_VERSION%%.*})"
+  "erlang (>= 1:${OTP_VERSION%%.*})"
 dpkg-deb --build "$STAGE" "$DEB"
 rm -rf "$STAGE"
 echo ">> Done: $DEB"; ls -la "$DEB"
