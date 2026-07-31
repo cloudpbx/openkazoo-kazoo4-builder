@@ -34,7 +34,14 @@ mkdir -p "$STAGE/usr/local/lib/erlang" "$STAGE/usr/local/bin"
 cp -a /usr/local/lib/erlang/. "$STAGE/usr/local/lib/erlang/"
 ln -sf /usr/local/lib/erlang/bin/erl  "$STAGE/usr/local/bin/erl"
 ln -sf /usr/local/lib/erlang/bin/erlc "$STAGE/usr/local/bin/erlc"
-write_deb_control "$STAGE" erlang "$VER" "$ARCH" \
+# Epoch 1 (control Version only — kept out of the .deb filename per dpkg
+# convention). Debian's stock erlang carries epoch 1 (e.g. 1:23.x on bullseye,
+# 1:25.x on bookworm); a Debian epoch outranks any epoch-0 version, so without
+# our own epoch apt prefers Debian's OTP 23/25 to satisfy `kazoo Depends: erlang`
+# and installs the wrong runtime (Kazoo 4.4 needs OTP >= 26). `1:${OTP_VERSION}`
+# outranks Debian's `1:23`/`1:25` so our package wins. Pairs with kazoo's
+# `Depends: erlang (>= 1:26)` so Debian's erlang can't satisfy it at all.
+write_deb_control "$STAGE" erlang "1:${VER}" "$ARCH" \
   "Erlang/OTP ${OTP_VERSION} built via kerl for Kazoo 4.4 (system OpenSSL, no wx/javac)"
 dpkg-deb --build "$STAGE" "$DEB"
 rm -rf "$STAGE"
