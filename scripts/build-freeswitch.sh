@@ -14,6 +14,15 @@ FS_ENABLE_MODULES=(
   codecs/mod_opus               # OPUS codec
   applications/mod_http_cache   # HTTP media cache (http_cache:// URLs)
   formats/mod_shout             # MP3 playback/streaming (libmpg123/libshout)
+  # Per-language say engines for dynamic number/date/currency/spelled playback.
+  # mod_say_en is on by FS default (not listed). These are pure-FS modules (no
+  # extra system deps); the matching lang phrase-macro XML configs + sound files
+  # are installed at deploy time (kazoo-deploy). Italian (it) has no upstream
+  # mod_say_it in FS 1.10.9, so it is intentionally absent. See issue #10.
+  say/mod_say_es                # Spanish
+  say/mod_say_fr                # French
+  say/mod_say_de                # German
+  say/mod_say_pt                # Portuguese
 )
 
 # Disable SignalWire/FFmpeg4-incompatible modules, then enable each required
@@ -109,7 +118,8 @@ export PATH="/usr/local/lib/erlang/bin:$PATH"
   && make install )
 # Gate: every requested module must have produced a .so (mod_kazoo missing =
 # silent ecallmgr failure; the media modules are the point of this build).
-for _m in mod_kazoo mod_opus mod_http_cache mod_shout; do
+for _m in mod_kazoo mod_opus mod_http_cache mod_shout \
+          mod_say_es mod_say_fr mod_say_de mod_say_pt; do
   [ -f "/usr/lib/freeswitch/mod/${_m}.so" ] \
     || die "${_m}.so not built — check FreeSWITCH module deps/config"
 done
@@ -143,7 +153,7 @@ printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postinst"
 printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postrm"
 chmod 755 "$STAGE/DEBIAN/postinst" "$STAGE/DEBIAN/postrm"
 write_deb_control "$STAGE" freeswitch "$VER" "$ARCH" \
-  "FreeSWITCH ${FREESWITCH_VERSION} with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), and HTTP cache"
+  "FreeSWITCH ${FREESWITCH_VERSION} with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), HTTP cache, and say engines (en/es/fr/de/pt)"
 dpkg-deb --build "$STAGE" "$DEB"
 rm -rf "$STAGE"
 echo ">> Done: $DEB"; ls -la "$DEB"
