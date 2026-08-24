@@ -44,9 +44,12 @@ jobs:
           ! ldd /usr/bin/freeswitch | grep -q 'not found'
           # Kamailio modules kazoo-configs-kamailio loadmodule's must be shipped
           # (guards the include_modules gap).
+          # Only one of lib64/lib exists, so find always exits 1 here — under
+          # pipefail that failed the pipeline even when the module was found.
+          # Test find's output instead of its exit status.
           for m in websocket presence presence_xml outbound uuid; do
-            find /usr/lib64/kamailio /usr/lib/kamailio -name "$m.so" 2>/dev/null | grep -q . \
-              || { echo "missing kamailio module: $m.so"; exit 1; }
+            hit="$(find /usr/lib64/kamailio /usr/lib/kamailio -name "$m.so" 2>/dev/null || true)"
+            [ -n "$hit" ] || { echo "missing kamailio module: $m.so"; exit 1; }
           done
           # postinst must create the kamailio service user/group.
           getent passwd kamailio
