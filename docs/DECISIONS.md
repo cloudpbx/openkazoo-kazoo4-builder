@@ -28,3 +28,41 @@ package ships **no VP8/VP9 video codecs**.
 `--disable-libvpx --disable-libyuv` in `scripts/build-freeswitch.sh` **and**
 fixing the arm64 bundled-libvpx build (or switching to system libvpx). Treat it
 as a deliberate feature with its own validation.
+
+## D-02: Debian 11 builds pin a frozen bullseye-security snapshot (2026-09-10)
+
+**Decision:** The Debian 11 build image sources `bullseye-security` from
+`snapshot.debian.org` at a pinned timestamp (`SECURITY_SNAPSHOT`, currently
+`20260824T000000Z`) and disables apt's `Valid-Until` check. Plain `bullseye`
+and `bullseye-updates` still come from `deb.debian.org`.
+
+**Status:** Accepted.
+
+**Context / rationale:**
+- Bullseye left LTS in August 2026. Two failures landed together on
+  `deb.debian.org`: the `bullseye-security` `InRelease` file went past its
+  `Valid-Until`, so `apt-get update` exits 100, and the matching pool stopped
+  serving `.deb` files, so every fetch 404s. All eight Debian 11 CI legs died
+  at image build.
+- `archive.debian.org` carries `bullseye` but, as of 2026-09, has no
+  `bullseye-security` Release file, so it cannot replace the security suite.
+- Only the security line is repointed. `snapshot.debian.org` drops connections
+  on large downloads, so leaving `build-essential` and friends on the fast
+  mirror keeps the image build reliable. `Acquire::Retries "10"` covers the
+  smaller security fetches.
+- The pin reproduces what `bullseye-security` last shipped, so `libssl-dev`
+  stays at `1.1.1w-0+deb11u8`, the version this image has always built OTP
+  26.2.5.20 against.
+
+**Consequences:**
+- Debian 11 packages are built against a frozen toolchain. Bullseye receives no
+  further security updates, so there is nothing newer to miss, but the build
+  environment will not improve either.
+- `Valid-Until` enforcement is off for this image. Signature verification is
+  untouched, so packages are still checked against Debian's keyring.
+- Debian 12 is unaffected and keeps normal mirrors.
+
+**If this is ever revisited:** once `archive.debian.org` publishes
+`bullseye-security`, repoint there and drop the snapshot pin. When Debian 11
+support is dropped, delete `docker/Dockerfile.debian-11` and the `debian-11`
+matrix entries instead of maintaining the pin.
