@@ -5,10 +5,10 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/e/erlang/erlang_26.2.5.20-4~bookworm_amd64.deb
-Size: 41237890
-SHA256: cc1ef9a38f08f436e3cb4d788d51d0c0b45609b75f8804187ba4db8e32680cf7
-SHA1: 631233e50e8bda33091166bc0c4de6c6cb0b270d
-MD5sum: 5d36b7b367814cebcc9161f79726e2fe
+Size: 41240534
+SHA256: 243bb31e078e204d42aa25ad045977afb8cef1e338c0b36ce7add8dbef4ae46c
+SHA1: 58217025ef145e4a85c91e6afa48e539a6afee63
+MD5sum: a67088074c9088a6bfbb2fc7bcd47e4f
 Description: Erlang/OTP 26.2.5.20 built via kerl for Kazoo 4.4 (system OpenSSL, no wx/javac)
 
 Package: freeswitch
@@ -18,11 +18,11 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/f/freeswitch/freeswitch_1.10.9-4~bookworm_amd64.deb
-Size: 5117486
-SHA256: 437cc070e7cf6eea6d2d66132a8225fd3b9c1afc230607d25f075dcc13f1621f
-SHA1: 49e124ff8f67efe1cbeba2fa34889c91db7e6004
-MD5sum: 50f998f1d9ac87a64caa586bd048288c
-Description: FreeSWITCH 1.10.9 with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), and HTTP cache
+Size: 5198554
+SHA256: a542756489ef88415ad1296970301be265f0557186ebfe7ac25bffdb26fc48aa
+SHA1: 8f16227855997199b972e682f2522a25d53e9f66
+MD5sum: 2d55afb43ecdd2f1ed01214a51210900
+Description: FreeSWITCH 1.10.9 with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), HTTP cache, and say engines (en/es/fr/de/pt)
 
 Package: kamailio
 Version: 5.8.8-4~bookworm
@@ -31,23 +31,23 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/k/kamailio/kamailio_5.8.8-4~bookworm_amd64.deb
-Size: 11957558
-SHA256: 72c262051b478cb168a5ae9c761f01a28677875551d4513a422f486a0f36a0a2
-SHA1: fffb97afd86b0b1afc3295eff2edd5bc496fd5a4
-MD5sum: 8d454be42aa69e8f7f1f851288fdb9b5
+Size: 11957950
+SHA256: 06d1cf5e0acde6cc4808973d5de707509b160b941aeb709e1a6f900f2f551e82
+SHA1: 6a9194f1676576a2967efc23cae74a1de29a056f
+MD5sum: 03a4b06a2f66b82a2a66895cd22da417
 Description: Kamailio 5.8.8 SIP proxy (db_mysql db_postgres tls kazoo rabbitmq presence websocket outbound)
 
 Package: kazoo
-Version: 4.4.0~4.4.20260731.25d9a43e-4~bookworm
+Version: 4.4.0~4.4.20260910.a77a82b1-4~bookworm
 Architecture: amd64
 Maintainer: openkazoo build <build@cloudpbx.example>
 Depends: erlang (>= 1:26)
 Priority: optional
 Section: comm
-Filename: pool/main/k/kazoo/kazoo_4.4.0~4.4.20260731.25d9a43e-4~bookworm_amd64.deb
-Size: 59413126
-SHA256: 8ccc84f2bb24f129a7ce4d368d1389e8a6ca7cd3f9214d3bdae0a7013721bda9
-SHA1: 41353a6e692a8a3959f41f9a402bf8c331128c80
-MD5sum: 1ad37488d1ab46a918bcbd3193923a00
+Filename: pool/main/k/kazoo/kazoo_4.4.0~4.4.20260910.a77a82b1-4~bookworm_amd64.deb
+Size: 59456286
+SHA256: dce4573988825b615b1bd7633e3a3a483a690c49c21080027152b1a8b2fe9263
+SHA1: a8ca94c61a5fb25753468a135d61875a17079a02
+MD5sum: 99ceda39db958e08ad2dc37881d12785
 Description: Kazoo 4.4 UCaaS platform (built against Erlang/OTP 26.2.5.20, include_erts=false)
 

@@ -5,39 +5,39 @@ Origin: openkazoo
 Label: openkazoo-kazoo4-builder
 Suite: stable
 Codename: bullseye
-Date: Fri, 31 Jul 2026 04:56:23 UTC
+Date: Thu, 10 Sep 2026 21:43:17 UTC
 Architectures: amd64 arm64
 Components: main
 Description: Community-built Kazoo 4.4 stack for Debian bullseye
 MD5Sum:
- eb609a18095a6e4f9e9c7cb9d535659f 2053 main/binary-amd64/Packages
- 134f55d1f93a5c4d61cec737fbd7d215 961 main/binary-amd64/Packages.gz
+ c1cd636fd7ee28a1e108c1272a1e5ab1 2083 main/binary-amd64/Packages
+ 89966ddff6fb5851d1f172dd8fa2693a 982 main/binary-amd64/Packages.gz
  b803ca246d812d24f9ebc5f6f0bfe7ec 167 main/binary-amd64/Release
- b16dcda80dbbe30a0a5885c735bdfbfe 2052 main/binary-arm64/Packages
- f0d70091762f3306b05576063a608ade 963 main/binary-arm64/Packages.gz
+ 2fea87f31b032bb6508c3cbbf3f6e527 2082 main/binary-arm64/Packages
+ 9f42f224abddfe53e563d3768fc4dc1d 983 main/binary-arm64/Packages.gz
  d44e2fefa654445412ab1301597e75e1 167 main/binary-arm64/Release
 SHA1:
- 78afc4fd79bcb71f651ba2093fab45245d6ca123 2053 main/binary-amd64/Packages
- 7347e608bf0f4288e9ae80b5c326b65ceb600b6a 961 main/binary-amd64/Packages.gz
+ 522fd8726d20b6436ff21ebb160cd934247b1c87 2083 main/binary-amd64/Packages
+ 98045214dc81d2e8d90c760915378403b88f4523 982 main/binary-amd64/Packages.gz
  32d5c85392ff11f58e0dc5b12cd5c45e8ae1df51 167 main/binary-amd64/Release
- 550f16ebda143e5bb86b2c158c0cb312f3edbd43 2052 main/binary-arm64/Packages
- cd85c91c01c9042fb201b9535342b1d34946767d 963 main/binary-arm64/Packages.gz
+ 8193a2ea55efb25d26a882b5d33439a0c2c9fa75 2082 main/binary-arm64/Packages
+ 7078ecb14c857e7a99825bda3f2ded50a72b4b8f 983 main/binary-arm64/Packages.gz
  fd8035beb198b347895ce6b8a949f95c610a5b81 167 main/binary-arm64/Release
 SHA256:
- d0e1422c8ee294cbb11d77011984ab3c96029b31a77e4609412c86069b578bb0 2053 main/binary-amd64/Packages
- 88a379ec73d08c64fe9c9bf1987faedfa429c0e3a150ef43aea4006ee24a799d 961 main/binary-amd64/Packages.gz
+ 932b474f405040e8ba085e1fbecaf89a24ccddcaaa6261577296c44408cdf424 2083 main/binary-amd64/Packages
+ dd83bd624bfef7137f1d4b1d81306e1e7272494b8868e840f5fe11fb2951466c 982 main/binary-amd64/Packages.gz
  f28a1cb7545edaed7650cce503597ecbfcfe9c7d8329683c1752334f1c0aea3c 167 main/binary-amd64/Release
- 37ed94aa74054c7ee42411abafa43d7f7ee292014eaef9d9fb0dd093553204f1 2052 main/binary-arm64/Packages
- 607a95bf770124949b66ba2b96b9adda0e621747bcca3657a09c5d718a454a7f 963 main/binary-arm64/Packages.gz
+ 5314bd856ac22a3e0ca0264571f99f564e72c46bbb6085ac4b7559ce14a0de6c 2082 main/binary-arm64/Packages
+ 2890508153f612847714e2185047d3265956193ebc381aa0d0b2f0cb28621c0d 983 main/binary-arm64/Packages.gz
  9f695b1913debc25c64bff0f3a20f486c78102f1a4c98a9953e17fb1f827d05c 167 main/binary-arm64/Release
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCgAdFiEEJLYPSUiC2AwwgkxktWRDVgsLf+sFAmpsKvcACgkQtWRDVgsL
-f+vK7AgAsWh9MZKyEVfKIMtu7wnQeqRFr09Cdwk7IC8eV09RN/kgS0BDmh71vFgr
-ai+rYUPHFvSFg9rc7kZ4iaYXG1/iQkklPBM+AypYkVX8zTzgbxt8GzgVJGprKFl8
-hEa1sd/Ta/9ZwcyGxZBRnIQ83ro6tU0nufDeVyoKQpDPKkD6qxAweAPASaqsGk5D
-v5FfU8zBxES8jYmHiB7VpfqnwW++Fl7vECMpTfYNTSqZjGJeoVTdIWJgcnJWd70b
-PUHn8bUC5jyX1TK6R8qcmVYNUpFoTHZvqxvB5YXOVypKJJek6HOGpeiZ5HZKZ0lK
-du4jr2gk0YInGGxZMp2iQDilWEU0hA==
-=2Lkr
+iQEzBAEBCgAdFiEEJLYPSUiC2AwwgkxktWRDVgsLf+sFAmqjJHUACgkQtWRDVgsL
+f+vzPAf/Zh5ze2ClmWRh4SXQKAMgrfCw6fBjKCm0C/tUnkrEy2ZAu2bkaw+qZ6uK
+iS+o9UKB6hOdekdnZwEzYQ/mUnHbOpjZYsYU5oYHsbY3jzLv10f2ObiiL15OM++s
+CXGpbmcaYMvXu9W6FlKHsxqH9+a6F+nImRA6y90RAgSdoeRfKAixOb5CzzoXuYnZ
+3L5cjbWWE68g/ZvCAdVISo7j2wATbnUMVBGzshIe3ktmsVlLaVayFvWSD7mMUi0e
+WqIjaTFuKuMPccx1jkFXQMjmSk1pHr4IJltio18leFKKQIB+NIPRYgusdQOF7/8s
+6hpRfG3EO/jMC6rYPEnI6p8YJbavsA==
+=0ViB
 -----END PGP SIGNATURE-----
