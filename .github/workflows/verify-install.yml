@@ -44,10 +44,86 @@ jobs:
           ! ldd /usr/bin/freeswitch | grep -q 'not found'
           # Kamailio modules kazoo-configs-kamailio loadmodule's must be shipped
           # (guards the include_modules gap).
+          #
+          # Collect the module dirs that exist before searching. Passing both
+          # unconditionally made `find` exit 1 for the absent one, and this step
+          # runs under `-o pipefail`, so the pipeline returned 1 even when the
+          # module was found and printed. That reported every module as missing
+          # on all four legs while the packages were fine. The 2>/dev/null was
+          # hiding find's own complaint about the missing path, so drop it.
+          kam_dirs=""
+          for d in /usr/lib64/kamailio /usr/lib/kamailio; do
+            [ -d "$d" ] && kam_dirs="$kam_dirs $d"
+          done
+          [ -n "$kam_dirs" ] || { echo "no kamailio module directory found"; exit 1; }
+          echo "kamailio module dirs:$kam_dirs"
           for m in websocket presence presence_xml outbound uuid; do
-            find /usr/lib64/kamailio /usr/lib/kamailio -name "$m.so" 2>/dev/null | grep -q . \
+            find $kam_dirs -name "$m.so" | grep -q . \
               || { echo "missing kamailio module: $m.so"; exit 1; }
           done
           # postinst must create the kamailio service user/group.
           getent passwd kamailio
           getent group kamailio
+
+      # The check whose absence let two non-booting kazoo packages reach the
+      # apt repo. `rebar3 tar` exits 0 for a release that cannot start, so the
+      # only way to know is to start it. No RabbitMQ or CouchDB here, so a
+      # healthy node is out of reach; what is in reach is proving the release
+      # gets through boot with its ERTS applications started, which is exactly
+      # what was broken.
+      - name: Boot the installed kazoo release
+        shell: bash
+        run: |
+          set -euo pipefail
+          REL=/opt/kazoo/releases/0.0.0
+          test -f "$REL/kazoo.boot" || { echo "no kazoo.boot — the runner execs -boot $REL/kazoo"; exit 1; }
+
+          # Static assertions on the shipped script, mirroring the build gate.
+          ( cd "$REL" && /usr/local/lib/erlang/bin/erl -noshell -eval '
+              {ok, Bin} = file:read_file("kazoo.boot"),
+              {script, {Name, _}, Instrs} = binary_to_term(Bin),
+              Started = [A || {apply, {application, start_boot, [A | _]}} <- Instrs],
+              Required = [crypto, ssl, public_key, asn1, compiler, runtime_tools, syntax_tools, kazoo],
+              case [A || A <- Required, not lists:member(A, Started)] of
+                [] -> io:format("~s starts ~p apps~n", [Name, length(Started)]), halt(0);
+                M  -> io:format("FATAL: never starts ~p~n", [M]), halt(1)
+              end.' )
+
+          # Every lib path the script references must exist. This is the check
+          # that catches the in-place upgrade failure mode, where the boot
+          # script survives but points at lib dirs dpkg has replaced.
+          ( cd "$REL" && /usr/local/lib/erlang/bin/erl -noshell -eval '
+              {ok, Bin} = file:read_file("kazoo.boot"),
+              {script, _, Instrs} = binary_to_term(Bin),
+              Paths = lists:usort(lists:append([P || {path, P} <- Instrs])),
+              Missing = [P || P <- Paths,
+                              Abs <- ["/opt/kazoo" ++ string:prefix(P, "$ROOT")],
+                              not filelib:is_dir(Abs)],
+              case Missing of
+                [] -> io:format("all ~p boot paths present~n", [length(Paths)]), halt(0);
+                _  -> io:format("FATAL: boot script references absent dirs ~p~n", [Missing]), halt(1)
+              end.' )
+
+          # Now actually start it. Booting past the ERTS apps is the signal;
+          # dying later for want of RabbitMQ/CouchDB is expected here.
+          ERTS=$(basename "$(ls -d /usr/local/lib/erlang/erts-*)")
+          set +e
+          ROOTDIR=/opt/kazoo BINDIR="/usr/local/lib/erlang/$ERTS/bin" EMU=beam \
+            timeout 90 "/usr/local/lib/erlang/$ERTS/bin/erlexec" \
+              -boot "$REL/kazoo" -noshell -sname vi$$ -setcookie verify \
+              > /tmp/boot.log 2>&1
+          rc=$?
+          set -e
+          echo "erlexec exit=$rc (124 means it was still running, i.e. booted)"
+          if grep -qE 'Runtime terminating during boot|load_failed' /tmp/boot.log; then
+            echo "FATAL: release failed during boot"
+            grep -oE 'load_failed,\[[^]]*' /tmp/boot.log | head -1
+            tail -30 /tmp/boot.log
+            exit 1
+          fi
+          if grep -qE "undef,\[\{(crypto|ssl|public_key|asn1)," /tmp/boot.log; then
+            echo "FATAL: an ERTS application was not started (undef on its API)"
+            tail -30 /tmp/boot.log
+            exit 1
+          fi
+          echo "release booted past its ERTS applications"
