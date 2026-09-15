@@ -22,12 +22,47 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          # Debian 11 left LTS, so bullseye-security's index is expired and its
+          # pool 404s. docker/Dockerfile.debian-11 already works around this
+          # (docs/DECISIONS.md D-02) but this workflow runs a raw debian:11, so
+          # it needs the same treatment or even `apt-get install curl` fails.
+          # Keep SECURITY_SNAPSHOT in step with the Dockerfile.
+          if [ "$CODENAME" = bullseye ]; then
+            printf '%s\n' \
+              'deb http://deb.debian.org/debian bullseye main' \
+              'deb http://deb.debian.org/debian bullseye-updates main' \
+              'deb http://snapshot.debian.org/archive/debian-security/20260824T000000Z bullseye-security main' \
+              > /etc/apt/sources.list
+            printf '%s\n' 'Acquire::Check-Valid-Until "false";' 'Acquire::Retries "10";' \
+              > /etc/apt/apt.conf.d/99bullseye-eol
+          fi
+
           apt-get update && apt-get install -y curl ca-certificates gnupg
           curl -fsSL https://cloudpbx.github.io/openkazoo-kazoo4-builder/pubkey.asc \
             | tee /usr/share/keyrings/openkazoo.asc > /dev/null
           echo "deb [signed-by=/usr/share/keyrings/openkazoo.asc] \
             https://cloudpbx.github.io/openkazoo-kazoo4-builder/debian ${CODENAME} main" \
             > /etc/apt/sources.list.d/openkazoo.list
+
+          # This workflow fires on build completion, but the repo is served by
+          # GitHub Pages, whose deploy lags the gh-pages push by minutes. Racing
+          # it produces "Unable to locate package kazoo" against a repo that is
+          # fine, which reads exactly like a broken package. Wait for Pages to
+          # serve an index listing every package before trusting a failure.
+          PKGS="https://cloudpbx.github.io/openkazoo-kazoo4-builder/debian/dists/${CODENAME}/main/binary-$(dpkg --print-architecture)/Packages"
+          for i in $(seq 1 30); do
+            missing=""
+            body="$(curl -fsSL "$PKGS" 2>/dev/null || true)"
+            for p in kazoo freeswitch kamailio erlang; do
+              printf '%s' "$body" | grep -qx "Package: $p" || missing="$missing $p"
+            done
+            [ -z "$missing" ] && { echo "Pages index complete after ${i} attempt(s)"; break; }
+            echo "waiting for Pages to serve:$missing (attempt $i/30)"
+            [ "$i" = 30 ] && { echo "Pages never served:$missing"; exit 1; }
+            sleep 20
+          done
+
           apt-get update
           apt-get install -y kazoo freeswitch kamailio
       - name: Smoke-test artifacts present
