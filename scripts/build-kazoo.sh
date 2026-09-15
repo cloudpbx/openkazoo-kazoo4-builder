@@ -28,6 +28,33 @@ patch_include_erts() {
   mv "$out" "$f"
 }
 
+# The ERTS-provided applications upstream declares as {App, none} in the relx
+# release. `none` means include but neither load nor start, which is correct
+# only while include_erts is true, because the bundled ERTS boot supplies them.
+# patch_include_erts flips include_erts to false, so without this they end up
+# neither bundled nor started: the boot script omits 7 of its starts, hackney
+# and couchbeam cannot start, kazoo_data never starts, and no kapp ever starts.
+# The visible symptom is `sup kapps_controller running_apps` blaming rabbitmq
+# and BigCouch connectivity, which sends you chasing the wrong thing.
+#
+# os_mon is deliberately NOT in this list. It is ERTS-provided and declared
+# none, but the known-good release does not start it either, so restoring it
+# would add a start the working deployment never had.
+ERTS_APPS_TO_START='crypto ssl public_key asn1 compiler runtime_tools syntax_tools'
+
+# Rewrite {App, none} -> App for the apps above, leaving every other `none`
+# alone. The ~38 kazoo kapps are legitimately none: kapps_controller starts
+# them on demand, so starting them at boot would ignore per-node config.
+patch_erts_app_load_types() {
+  local f="$1" out="$1.new" app
+  cp "$f" "$out"
+  for app in $ERTS_APPS_TO_START; do
+    # Anchored on the exact tuple so a kapp sharing a name prefix is untouched.
+    sed -E "s/\{$app,[[:space:]]*none\}/$app/g" "$out" > "$out.t" && mv "$out.t" "$out"
+  done
+  mv "$out" "$f"
+}
+
 # synth_version <branch> <yyyymmdd> <shortsha> -> 4.4.0~<branch>.<date>.<sha>
 synth_version() { echo "4.4.0~${1}.${2}.${3}"; }
 
@@ -55,6 +82,8 @@ DEB="$OUT/kazoo_${PKG_VERSION}_${ARCH}.deb"
 
 echo ">> Patching include_erts=false"
 patch_include_erts "$SRC/rebar.config"
+echo ">> Restoring load types for ERTS apps the unbundled release must start"
+patch_erts_app_load_types "$SRC/rebar.config"
 
 export PATH="/usr/local/lib/erlang/bin:$PATH"
 echo ">> rebar3 compile (hard gate)"
@@ -68,6 +97,50 @@ TARBALL="$(find "$SRC/_build/default/rel/kazoo" -maxdepth 1 -name '*.tar.gz' | h
 echo ">> Packaging kazoo deb: $DEB"
 rm -rf "$STAGE"; mkdir -p "$STAGE/opt/kazoo"
 tar -xzf "$TARBALL" -C "$STAGE/opt/kazoo"
+
+REL_DIR="$STAGE/opt/kazoo/releases/0.0.0"
+# relx names the release boot script start.boot, but the runner execs
+# `-boot <reldir>/kazoo`, so the release needs that name too. Copy rather than
+# symlink so dpkg owns a real file and an in-place upgrade replaces it.
+[ -f "$REL_DIR/start.boot" ] || die "relx emitted no start.boot in $REL_DIR"
+cp "$REL_DIR/start.boot" "$REL_DIR/kazoo.boot"
+
+# Hard gate on the boot script's contents. Every deb before this shipped a
+# script that started neither crypto nor ssl and could not boot, and `rebar3
+# tar` exits 0 regardless, so nothing upstream of here catches it.
+echo ">> Gating boot script starts the ERTS apps"
+( cd "$REL_DIR" && erl -noshell -eval '
+    {ok, Bin} = file:read_file("kazoo.boot"),
+    {script, {Name, _Vsn}, Instrs} = binary_to_term(Bin),
+    Started = [A || {apply, {application, start_boot, [A | _]}} <- Instrs],
+    Required = [crypto, ssl, public_key, asn1, compiler, runtime_tools, syntax_tools, kazoo],
+    Missing = [A || A <- Required, not lists:member(A, Started)],
+
+    %% Every started application must have its declared dependencies started
+    %% before it. systools only checks that deps are *included*, not started,
+    %% so a load-only dep produces a script that generates cleanly and then
+    %% dies at runtime. goldrush is the live example: it declares syntax_tools
+    %% and compiler, which ship as load-only. Asserting the invariant beats
+    %% patching one app by name, which is what a dependency-order regression
+    %% in any other app would need next.
+    Specs = [{A, D} || {apply, {application, load, [{application, A, P} | _]}} <- Instrs,
+                       lists:member(A, Started), {applications, D} <- P],
+    Rank = fun(A) -> length(lists:takewhile(fun(E) -> E =/= A end, Started)) end,
+    OutOfOrder = [{A, Dep} || {A, Deps} <- Specs, Dep <- Deps,
+                              lists:member(Dep, Started) =:= false
+                                orelse Rank(Dep) > Rank(A)],
+
+    case {Missing, OutOfOrder} of
+      {[], []} ->
+        io:format("   ~s boot script starts ~p applications, dependency order clean~n",
+                  [Name, length(Started)]),
+        halt(0);
+      _ ->
+        io:format("   FATAL: never started ~p~n   FATAL: dependency violations ~p~n",
+                  [Missing, OutOfOrder]),
+        halt(1)
+    end.' ) || die "boot script gate failed — check the relx load types in rebar.config"
+
 write_deb_control "$STAGE" kazoo "$PKG_VERSION" "$ARCH" \
   "Kazoo 4.4 UCaaS platform (built against Erlang/OTP ${OTP_VERSION}, include_erts=false)" \
   "erlang (>= 1:${OTP_VERSION%%.*})"
