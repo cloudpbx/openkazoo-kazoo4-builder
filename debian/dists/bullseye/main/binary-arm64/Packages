@@ -5,10 +5,10 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/e/erlang/erlang_26.2.5.20-4~bullseye_arm64.deb
-Size: 40235318
-SHA256: e3bf92996577c3ff4f296214a43e9c69c1d931dd73e8258b799cf38c673c9516
-SHA1: 2de25b332d47e93d618e06ef767b483c3c1a85ab
-MD5sum: a64edb2105ca3cfecf7a3b770cbd2225
+Size: 40235454
+SHA256: 762355a3babbfaf46bf57d9a6ee1b805582c447c56679558050f04045d5ec78b
+SHA1: 760529f9f91120f77e0cf419308796c3d645ea6b
+MD5sum: 8fe669a4c78d1b936368708b4ce2ab44
 Description: Erlang/OTP 26.2.5.20 built via kerl for Kazoo 4.4 (system OpenSSL, no wx/javac)
 
 Package: freeswitch
@@ -18,10 +18,10 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/f/freeswitch/freeswitch_1.10.9-4~bullseye_arm64.deb
-Size: 5822738
-SHA256: 3dd80fb0b5169b0ab864dc1245f74c6ec44fed126fe1f9a4757720e500d3e801
-SHA1: 783e8c985c12b7d3b52ed8ea3d102349f7f01307
-MD5sum: ac4152ffae2244e378280ce045ddce54
+Size: 5821862
+SHA256: 551d7d331ea8cadfd1094b47500adefd7aeead613ddf20fdad7b1b4a969b7440
+SHA1: 2947cad602cc505e33705cef078ed670046ad011
+MD5sum: c53a10ee6fb590159c18c45eb9c5a683
 Description: FreeSWITCH 1.10.9 with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), HTTP cache, and say engines (en/es/fr/de/pt)
 
 Package: kamailio
@@ -31,23 +31,9 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/k/kamailio/kamailio_5.8.8-4~bullseye_arm64.deb
-Size: 8941390
-SHA256: 28803a27555cf6a620ab264fa296bdc6542ae74c8d818221be257860d4f478c5
-SHA1: 52bff52a9ea422998be36a369a3ead51d598954d
-MD5sum: b8ba251cbb494bf319de86e0c3fd72fb
+Size: 8941458
+SHA256: 14dba5c0557abb38f316fe98a21e1e7a020212437b3ed889a489e8e626cbd5b3
+SHA1: a6d3b9b07efb9206610a4a2d684640d8932b4211
+MD5sum: ae695fde7b734c09a88c0d2dc40b1cc3
 Description: Kamailio 5.8.8 SIP proxy (db_mysql db_postgres tls kazoo rabbitmq presence websocket outbound)
-
-Package: kazoo
-Version: 4.4.0~4.4.20260915.6e9dbedd-4~bullseye
-Architecture: arm64
-Maintainer: openkazoo build <build@cloudpbx.example>
-Depends: erlang (>= 1:26)
-Priority: optional
-Section: comm
-Filename: pool/main/k/kazoo/kazoo_4.4.0~4.4.20260915.6e9dbedd-4~bullseye_arm64.deb
-Size: 59020298
-SHA256: 7f56eba5b4704d92424a8082b75ea2ef9e424fd916a97b4ef72303c3b5a50784
-SHA1: 593c4a52a949d82153925925d00cb4badd1f97f0
-MD5sum: b243429e43417dd93e041d071cca8089
-Description: Kazoo 4.4 UCaaS platform (built against Erlang/OTP 26.2.5.20, include_erts=false)
 
