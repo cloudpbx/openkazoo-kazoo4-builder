@@ -8,6 +8,15 @@ on:
         description: 'Publish to gh-pages + create Release'
         type: boolean
         default: false
+      components:
+        # publish.sh rebuilds the apt repo from only this run's debs, and the
+        # gh-pages deploy replaces the whole directory, so narrowing this while
+        # publishing REMOVES the omitted components from the repo. That is the
+        # intended lever for withdrawing a bad package, and the reason not to
+        # narrow it for a routine publish.
+        description: 'JSON list of components to build'
+        type: string
+        default: '["erlang","kazoo","freeswitch","kamailio"]'
 
 permissions:
   contents: write   # create releases + push gh-pages
@@ -17,7 +26,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        component: [erlang, kazoo, freeswitch, kamailio]
+        # inputs.components is unset on a tag push, so fall back to all four.
+        component: ${{ fromJSON(inputs.components || '["erlang","kazoo","freeswitch","kamailio"]') }}
         arch: [amd64, arm64]
         distro: [debian-11, debian-12]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
