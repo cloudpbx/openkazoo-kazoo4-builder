@@ -1,0 +1,76 @@
+# syntax=docker/dockerfile:1.6
+# Build image for Kazoo 4.4 stack .deb packages (Debian 13 / trixie).
+# Built natively per-arch (amd64 or arm64) — no cross-compilation.
+# Toolchain mirrors docker/Dockerfile.debian-12, with two trixie removals:
+#   - python3-distutils is gone (Python 3.13 dropped distutils);
+#     python3-setuptools provides its shim. FreeSWITCH's configure is the
+#     consumer, and is not yet verified on trixie.
+#   - libpcre3-dev (PCRE1) is gone. Kamailio 5.8 already uses PCRE2, but
+#     FreeSWITCH 1.10.9 still needs PCRE1, so it must be bundled from source
+#     in build-freeswitch.sh the way sofia-sip and spandsp are.
+FROM debian:13
+
+ARG OTP_VERSION=26.2.5.20
+ARG REBAR_VERSION=3.27.0
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential autoconf m4 libncurses-dev libssl-dev libssh-dev \
+      unixodbc-dev xsltproc libxml2-utils libxml2-dev libunistring-dev flex bison make pkg-config \
+      dpkg-dev debhelper apt-utils devscripts debsigs reprepro \
+      libtool libtool-bin \
+      python3 python3-setuptools \
+      gnupg git curl wget jq ca-certificates unzip \
+      default-libmysqlclient-dev libcurl4-openssl-dev libpq-dev \
+      libsqlite3-dev libedit-dev libtiff-dev liblua5.4-dev uuid-dev \
+      libavformat-dev libswscale-dev libavcodec-dev libavutil-dev \
+      libspeex-dev libspeexdsp-dev libopus-dev libvpx-dev yasm \
+      libsndfile1-dev libldns-dev libmpg123-dev libmp3lame-dev libshout3-dev \
+      libjpeg-dev libopenjp2-7-dev libuv1-dev libpng-dev libvorbis-dev libogg-dev \
+      libpcre2-dev libevent-dev libgeoip-dev libjson-c-dev librabbitmq-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# Public repos only — rewrite any SSH GitHub URLs to HTTPS.
+RUN git config --global url."https://github.com/".insteadOf "git@github.com:" \
+ && git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+# Modern Go from the official tarball. Kazoo's martini/secsipid STIR-SHAKEN
+# extension needs Go >= 1.16 (package io/fs); Debian's packaged golang is too
+# old on bullseye (1.15). Pinned so every distro uses the same toolchain.
+# TARGETARCH (amd64/arm64) is supplied by BuildKit and matches Go's naming.
+ARG GO_VERSION=1.22.6
+ARG TARGETARCH
+RUN curl -fsSL --retry 5 --retry-all-errors \
+      "https://go.dev/dl/go${GO_VERSION}.linux-${TARGETARCH}.tar.gz" -o /tmp/go.tgz \
+ && tar -C /usr/local -xzf /tmp/go.tgz \
+ && rm /tmp/go.tgz \
+ && /usr/local/go/bin/go version
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# kerl (OTP version manager) + rebar3, both pinned.
+RUN curl -fsSL --retry 5 --retry-all-errors \
+      https://raw.githubusercontent.com/kerl/kerl/master/kerl -o /usr/local/bin/kerl \
+ && chmod +x /usr/local/bin/kerl \
+ && curl -fsSL --retry 5 --retry-all-errors \
+      "https://github.com/erlang/rebar3/releases/download/${REBAR_VERSION}/rebar3" \
+      -o /usr/local/bin/rebar3 \
+ && chmod +x /usr/local/bin/rebar3
+
+# Build Erlang/OTP into the image (~30 min, cached layer). It MUST live in the
+# image, not be built per-component at runtime: kazoo (rebar3) and freeswitch
+# (mod_kazoo ei headers) run in their own fresh `docker run --rm` containers and
+# need `erl`/`escript` on PATH — rebar3 is itself an escript and cannot start
+# without Erlang. build-erlang.sh then just packages this tree into the deb.
+# Builds against the base image's system OpenSSL (3.5 on trixie).
+RUN set -eux \
+ && export KERL_BUILD_BACKEND=git \
+ && export KERL_CONFIGURE_OPTIONS="--without-javac --without-wx --without-debugger \
+      --without-observer --without-et --without-megaco" \
+ && kerl build "${OTP_VERSION}" "otp-${OTP_VERSION}" \
+ && kerl install "otp-${OTP_VERSION}" /usr/local/lib/erlang \
+ && /usr/local/lib/erlang/bin/erl \
+      -eval 'io:format("~s~n",[erlang:system_info(otp_release)]),halt().' -noshell
+
+ENV PATH="/usr/local/lib/erlang/bin:${PATH}"
+
+WORKDIR /work

@@ -12,11 +12,12 @@ arch_normalize() {
   esac
 }
 
-# codename_for <distro> -> Debian codename (bullseye/bookworm)
+# codename_for <distro> -> Debian codename (bullseye/bookworm/trixie)
 codename_for() {
   case "$1" in
     debian-11) echo bullseye ;;
     debian-12) echo bookworm ;;
+    debian-13) echo trixie ;;
     *) echo "unknown distro: $1" >&2; return 1 ;;
   esac
 }

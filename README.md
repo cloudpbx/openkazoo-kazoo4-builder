@@ -17,7 +17,7 @@ See [docs/INSTALL.md](docs/INSTALL.md) for end-user apt instructions.
 ## Build locally
 
 ```bash
-make build COMPONENT=erlang DISTRO=debian-12   # DISTRO=debian-11|debian-12 (default debian-12)
+make build COMPONENT=erlang DISTRO=debian-12   # DISTRO=debian-11|debian-12|debian-13 (default debian-12)
                                                # COMPONENT=erlang|kazoo|freeswitch|kamailio
 make sign                         # requires GPG_PRIVATE_KEY (see docs/GPG-KEY.md)
 make publish                      # assembles the apt repo (both suites) under build/repo/

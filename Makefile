@@ -21,7 +21,7 @@ ARCH           ?= $(shell uname -m)
 DISTRO         ?= debian-12
 
 VALID_COMPONENTS := erlang kazoo freeswitch kamailio
-VALID_DISTROS    := debian-11 debian-12
+VALID_DISTROS    := debian-11 debian-12 debian-13
 IMAGE            := openkazoo-kazoo4-builder:$(DISTRO)
 BUILD_DIR        := build
 OUT_DIR          := $(BUILD_DIR)/out
