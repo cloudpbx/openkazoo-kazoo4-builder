@@ -127,17 +127,24 @@ jobs:
           # Every lib path the script references must exist. This is the check
           # that catches the in-place upgrade failure mode, where the boot
           # script survives but points at lib dirs dpkg has replaced.
-          ( cd "$REL" && /usr/local/lib/erlang/bin/erl -noshell -eval '
-              {ok, Bin} = file:read_file("kazoo.boot"),
-              {script, _, Instrs} = binary_to_term(Bin),
-              Paths = lists:usort(lists:append([P || {path, P} <- Instrs])),
-              Missing = [P || P <- Paths,
-                              Abs <- ["/opt/kazoo" ++ string:prefix(P, "$ROOT")],
-                              not filelib:is_dir(Abs)],
-              case Missing of
-                [] -> io:format("all ~p boot paths present~n", [length(Paths)]), halt(0);
-                _  -> io:format("FATAL: boot script references absent dirs ~p~n", [Missing]), halt(1)
-              end.' )
+          # kazoo_ecallmgr.boot gets the same check. It has to come from this
+          # package, or an upgrade leaves it pointing at replaced dirs (CORV-1506).
+          dpkg -S "$REL/kazoo_ecallmgr.boot" >/dev/null \
+            || { echo "FATAL: kazoo_ecallmgr.boot is not shipped by the kazoo package"; exit 1; }
+          for boot in kazoo.boot kazoo_ecallmgr.boot; do
+            ( cd "$REL" && BOOT="$boot" /usr/local/lib/erlang/bin/erl -noshell -eval '
+                Boot = os:getenv("BOOT"),
+                {ok, Bin} = file:read_file(Boot),
+                {script, _, Instrs} = binary_to_term(Bin),
+                Paths = lists:usort(lists:append([P || {path, P} <- Instrs])),
+                Missing = [P || P <- Paths,
+                                Abs <- ["/opt/kazoo" ++ string:prefix(P, "$ROOT")],
+                                not filelib:is_dir(Abs)],
+                case Missing of
+                  [] -> io:format("~s: all ~p boot paths present~n", [Boot, length(Paths)]), halt(0);
+                  _  -> io:format("FATAL: ~s references absent dirs ~p~n", [Boot, Missing]), halt(1)
+                end.' )
+          done
 
           # Now actually start it. Booting past the ERTS apps is the signal;
           # dying later for want of RabbitMQ/CouchDB is expected here.
