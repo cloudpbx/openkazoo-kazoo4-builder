@@ -17,6 +17,13 @@ on:
         description: 'JSON list of components to build'
         type: string
         default: '["erlang","kazoo","freeswitch","kamailio"]'
+      distros:
+        # debian-13 builds here but publish.sh has no trixie suite yet, and a
+        # narrowed list would drop the omitted suites from the repo, so the
+        # publish job refuses anything but this default.
+        description: 'JSON list of distros to build'
+        type: string
+        default: '["debian-11","debian-12"]'
 
 permissions:
   contents: write   # create releases + push gh-pages
@@ -29,7 +36,7 @@ jobs:
         # inputs.components is unset on a tag push, so fall back to all four.
         component: ${{ fromJSON(inputs.components || '["erlang","kazoo","freeswitch","kamailio"]') }}
         arch: [amd64, arm64]
-        distro: [debian-11, debian-12]
+        distro: ${{ fromJSON(inputs.distros || '["debian-11","debian-12"]') }}
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
@@ -57,6 +64,11 @@ jobs:
     if: ${{ inputs.publish || startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-24.04
     steps:
+      - name: Refuse a non-default distro list
+        if: ${{ inputs.distros && inputs.distros != '["debian-11","debian-12"]' }}
+        run: |
+          echo "publish needs distros=[\"debian-11\",\"debian-12\"], got ${{ inputs.distros }}"
+          exit 1
       - uses: actions/checkout@v4
         with:
           submodules: true
