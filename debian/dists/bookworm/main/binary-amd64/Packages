@@ -5,10 +5,10 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/e/erlang/erlang_26.2.5.20-4~bookworm_amd64.deb
-Size: 41244930
-SHA256: bfcecc272785459aafb24c8e0ba4bff1b1821e52b08d2949a13cd93c74640126
-SHA1: bf134ff3f93f0ffde3eec46c77a730a507918896
-MD5sum: 358e983de63e91fc834b6c1fe576f042
+Size: 41239970
+SHA256: 7c54051f8116d9669bcd68460aca66f1f70ffffbc30df78aa55ad4bfecb49e94
+SHA1: 64082259171741483be33267e6088ab836d9af68
+MD5sum: 709ea3f18d9d06eed438a912ec418fcf
 Description: Erlang/OTP 26.2.5.20 built via kerl for Kazoo 4.4 (system OpenSSL, no wx/javac)
 
 Package: freeswitch
@@ -18,10 +18,10 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/f/freeswitch/freeswitch_1.10.9-4~bookworm_amd64.deb
-Size: 5197878
-SHA256: 384d696c0cd4fd69b94927a4f49d6add438d5c3dc078ad714b902adb8824d0ac
-SHA1: 2860b3855fe5d3d7663fe2aee536c5f8ad4fa991
-MD5sum: 545470ae14f3d12a018a156707dae48d
+Size: 5200086
+SHA256: 53c63675722dce674e1075959fa5262ff2e5b9590a84a6c86aa029974671248f
+SHA1: a07278d7d78a8bd695a3d2c2b0bbb7d3f905b52f
+MD5sum: 183f56b0fd371c0366bf3453e2ba30bb
 Description: FreeSWITCH 1.10.9 with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), HTTP cache, and say engines (en/es/fr/de/pt)
 
 Package: kamailio
@@ -31,10 +31,10 @@ Maintainer: openkazoo build <build@cloudpbx.example>
 Priority: optional
 Section: comm
 Filename: pool/main/k/kamailio/kamailio_5.8.8-4~bookworm_amd64.deb
-Size: 11956586
-SHA256: b9f95ff0bad9dca0efa85f081bbe46af40774e68ad90e7684ab8c224d6475483
-SHA1: 6d346355fa92f768d56f5a8e75b769821d4472e9
-MD5sum: a7418f75ed1304b43a7c877959ee08d2
+Size: 11959182
+SHA256: 2d13d66eeb1557b32345881d97f9e9bbea327f2f8beb844b1a3b6046ab658163
+SHA1: 59d6e001287826d5cf1d933d29e4be8faa7e0ef2
+MD5sum: fa2376767524ee54ea789275f0f438b0
 Description: Kamailio 5.8.8 SIP proxy (db_mysql db_postgres tls kazoo rabbitmq presence websocket outbound)
 
 Package: kazoo
@@ -45,9 +45,9 @@ Depends: erlang (>= 1:26)
 Priority: optional
 Section: comm
 Filename: pool/main/k/kazoo/kazoo_4.4.0~4.4.20261019.63bc8bcc-4~bookworm_amd64.deb
-Size: 59470346
-SHA256: a00d211fcd2dfa4d2fec98fb4568b5e8dc35839d217ebba7278c11725d5a85e5
-SHA1: 4004c949a35467ff1825c57d09630aa6c06b3c14
-MD5sum: ffb9a191aeb7d0b1499f8b3052c3189d
+Size: 59476910
+SHA256: a7c51434ef546afacd88d96e7f8d03f65fee2f889b9d8101a5235c28b082be29
+SHA1: f3fb6fc0548a706664e3a88df087321c706a3265
+MD5sum: e5dff5129b8cbd42c30c26c4deddadfd
 Description: Kazoo 4.4 UCaaS platform (built against Erlang/OTP 26.2.5.20, include_erts=false)
 
