@@ -13,6 +13,20 @@ DEB="$OUT/kamailio_${VER}_${ARCH}.deb"
 mkdir -p "$OUT"
 [ -f "$DEB" ] && { echo ">> $DEB exists — skipping"; exit 0; }
 
+# --- secsipidx (libsecsipid.a) from source, for the secsipid/secsipid_proc
+# STIR/SHAKEN modules. Kamailio's own make only compiles secsipid's Go
+# bindings against a prebuilt static lib + headers; it does not build the Go
+# side itself. The Go toolchain this needs is already pinned by this builder
+# (config/go.version) for other components, so no new dependency here.
+rm -rf "$B/secsipidx"
+git clone --depth 1 https://github.com/asipto/secsipidx.git "$B/secsipidx"
+git -C "$B/secsipidx" fetch --depth 1 origin "${SECSIPIDX_REF:?}"
+git -C "$B/secsipidx" checkout FETCH_HEAD
+( cd "$B/secsipidx/csecsipid" && make liba )
+cp "$B/secsipidx/csecsipid/libsecsipid.a" /usr/local/lib/
+cp "$B/secsipidx/csecsipid/secsipid.h" "$B/secsipidx/csecsipid/libsecsipid.h" /usr/local/include/
+[ -f /usr/local/lib/libsecsipid.a ] || die "libsecsipid.a not built — check secsipidx/csecsipid's make liba target"
+
 echo ">> Cloning kamailio ${KAMAILIO_VERSION}"
 rm -rf "$B/kamailio"
 git clone --depth 1 --branch "$KAMAILIO_VERSION" \
@@ -20,7 +34,7 @@ git clone --depth 1 --branch "$KAMAILIO_VERSION" \
 
 echo ">> Building kamailio (~30 min)"
 ( cd "$B/kamailio" \
-  && make FLAVOUR=kamailio include_modules="db_mysql db_postgres tls kazoo rabbitmq presence presence_xml presence_dialoginfo presence_mwi websocket outbound uuid" PREFIX=/usr cfg \
+  && make FLAVOUR=kamailio include_modules="db_mysql db_postgres tls kazoo rabbitmq presence presence_xml presence_dialoginfo presence_mwi websocket outbound uuid secsipid secsipid_proc" PREFIX=/usr cfg \
   && make -j"$(nproc)" \
   && make install )
 
@@ -44,7 +58,11 @@ find "$STAGE" -path '*kamailio*' -name '*.so' -print -quit | grep -q . \
 
 # Gate: the presence/websocket/outbound module groups kazoo-configs-kamailio
 # loadmodule's must be present (they need include_modules + libxml2/libunistring).
-for m in websocket presence presence_xml outbound uuid; do
+# secsipid/secsipid_proc are here too: kazoo-configs-kamailio's STIR/SHAKEN
+# role file loadmodule's secsipid.so, and a kamailio deb without it would fail
+# the same way a missing websocket.so would, just not caught until a node
+# tries to enable STIR/SHAKEN.
+for m in websocket presence presence_xml outbound uuid secsipid secsipid_proc; do
   find "$STAGE" -path "*kamailio/modules/$m.so" -print -quit | grep -q . \
     || die "kamailio module '$m' missing — check include_modules and build deps (libxml2-dev/libunistring-dev/uuid-dev)"
 done
@@ -98,7 +116,7 @@ POSTINST
 chmod 0755 "$STAGE/DEBIAN/postinst"
 
 write_deb_control "$STAGE" kamailio "$VER" "$ARCH" \
-  "Kamailio ${KAMAILIO_VERSION} SIP proxy (db_mysql db_postgres tls kazoo rabbitmq presence websocket outbound)"
+  "Kamailio ${KAMAILIO_VERSION} SIP proxy (db_mysql db_postgres tls kazoo rabbitmq presence websocket outbound secsipid)"
 dpkg-deb --build "$STAGE" "$DEB"
 rm -rf "$STAGE"
 echo ">> Done: $DEB"; ls -la "$DEB"
