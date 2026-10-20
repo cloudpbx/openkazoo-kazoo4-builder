@@ -92,7 +92,7 @@ jobs:
           done
           [ -n "$kam_dirs" ] || { echo "no kamailio module directory found"; exit 1; }
           echo "kamailio module dirs:$kam_dirs"
-          for m in websocket presence presence_xml outbound uuid; do
+          for m in websocket presence presence_xml outbound uuid secsipid secsipid_proc; do
             find $kam_dirs -name "$m.so" | grep -q . \
               || { echo "missing kamailio module: $m.so"; exit 1; }
           done
