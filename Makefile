@@ -15,6 +15,7 @@ SOFIA_SIP_VERSION   := $(shell cat config/sofia-sip.version)
 SPANDSP_REF         := $(shell cat config/spandsp.ref)
 MOD_KAZOO_REF       := $(shell cat config/mod_kazoo.ref)
 KAMAILIO_VERSION    := $(shell cat config/kamailio.version)
+SECSIPIDX_REF       := $(shell cat config/secsipidx.ref)
 
 COMPONENT      ?=
 ARCH           ?= $(shell uname -m)
@@ -27,8 +28,8 @@ BUILD_DIR        := build
 OUT_DIR          := $(BUILD_DIR)/out
 
 export KAZOO_VERSION OTP_VERSION REBAR_VERSION PKG_REVISION \
-       FREESWITCH_VERSION SOFIA_SIP_VERSION SPANDSP_REF MOD_KAZOO_REF KAMAILIO_VERSION \
-       DISTRO
+       FREESWITCH_VERSION SOFIA_SIP_VERSION MOD_KAZOO_REF KAMAILIO_VERSION \
+       SECSIPIDX_REF SPANDSP_REF DISTRO
 
 .PHONY: help
 help:  ## Show available targets
@@ -67,6 +68,7 @@ build: check-component docker-build  ## Build COMPONENT for DISTRO into $(OUT_DI
 	docker run --rm -v $(CURDIR):/work \
 	  -e KAZOO_VERSION -e OTP_VERSION -e REBAR_VERSION -e PKG_REVISION \
 	  -e FREESWITCH_VERSION -e SOFIA_SIP_VERSION -e SPANDSP_REF -e MOD_KAZOO_REF -e KAMAILIO_VERSION \
+	  -e SECSIPIDX_REF \
 	  -e DISTRO \
 	  $(IMAGE) \
 	  /work/scripts/build-$(COMPONENT).sh
