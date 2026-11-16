@@ -4,7 +4,7 @@ setup() {
   source "${BATS_TEST_DIRNAME}/../../scripts/build-freeswitch.sh" --lib-only
 }
 
-@test "configure_modules disables incompatibles and enables kazoo/opus/http_cache/shout" {
+@test "configure_modules disables incompatibles, keeps spandsp, and enables kazoo/opus/http_cache/shout" {
   cat > "$TMP/modules.conf" <<EOF
 endpoints/mod_verto
 applications/mod_signalwire
@@ -20,7 +20,9 @@ EOF
   grep -q '^#endpoints/mod_verto$'        "$TMP/modules.conf"
   grep -q '^#applications/mod_signalwire$' "$TMP/modules.conf"
   grep -q '^#applications/mod_av$'         "$TMP/modules.conf"
-  grep -q '^#applications/mod_spandsp$'    "$TMP/modules.conf"
+  # mod_spandsp stays enabled (built with the 76458fa V.18 patch)
+  grep -q '^applications/mod_spandsp$'     "$TMP/modules.conf"
+  ! grep -q '^#applications/mod_spandsp$'  "$TMP/modules.conf"
   # required modules enabled (uncommented, no leading #)
   grep -q '^event_handlers/mod_kazoo$'     "$TMP/modules.conf"
   grep -q '^codecs/mod_opus$'              "$TMP/modules.conf"
@@ -42,4 +44,11 @@ EOF
   run assert_mod_kazoo_fix "$TMP/kazoo_node.c"; [ "$status" -eq 0 ]
   printf 'ei_skip_term\n' > "$TMP/kazoo_node.c"
   run assert_mod_kazoo_fix "$TMP/kazoo_node.c"; [ "$status" -ne 0 ]
+}
+
+@test "assert_mod_spandsp_v18_fix passes only with handle_v18_status" {
+  printf 'static void handle_v18_status(void *user_data, int status)\n' > "$TMP/mod_spandsp_dsp.c"
+  run assert_mod_spandsp_v18_fix "$TMP/mod_spandsp_dsp.c"; [ "$status" -eq 0 ]
+  printf 'v18_init(NULL, TRUE, mode, V18_AUTOMODING_GLOBAL, put_text_msg, tdd);\n' > "$TMP/mod_spandsp_dsp.c"
+  run assert_mod_spandsp_v18_fix "$TMP/mod_spandsp_dsp.c"; [ "$status" -ne 0 ]
 }

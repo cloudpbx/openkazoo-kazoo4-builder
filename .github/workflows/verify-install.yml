@@ -77,6 +77,10 @@ jobs:
           # resolve all its libs (guards the multiarch bundle-glob regression).
           test -e /usr/lib/libspandsp.so.3
           ! ldd /usr/bin/freeswitch | grep -q 'not found'
+          # mod_spandsp (fax/T.38, built with the 76458fa V.18 patch) must ship
+          # and resolve all its libs (spandsp, libtiff) on a clean host.
+          test -f /usr/lib/freeswitch/mod/mod_spandsp.so
+          ! ldd /usr/lib/freeswitch/mod/mod_spandsp.so | grep -q 'not found'
           # Kamailio modules kazoo-configs-kamailio loadmodule's must be shipped
           # (guards the include_modules gap).
           #

@@ -33,6 +33,7 @@ Debian build image (`docker/Dockerfile.debian-11` or `docker/Dockerfile.debian-1
 - `config/` — version pins (single source of truth).
 - `docker/Dockerfile.debian-11`, `docker/Dockerfile.debian-12` — build images (kerl, rebar3, full toolchain).
 - `scripts/build-*.sh` — one per component; ports of the playbook recipe.
+- `patches/freeswitch/` — unmodified upstream FreeSWITCH patches that `build-freeswitch.sh` applies (`76458fa`: `mod_spandsp` V.18 fix).
 - `scripts/sign.sh`, `scripts/publish.sh` — GPG signing + reprepro apt repo.
 - `.github/workflows/` — matrix CI (`component × arch`) → sign → gh-pages → Release.
 
@@ -42,6 +43,14 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the
 > **No video support** — the FreeSWITCH package is built without VP8/VP9 codecs
 > (audio telephony only). This is a deliberate scope decision; see
 > [docs/DECISIONS.md](docs/DECISIONS.md) (D-01).
+
+> **Two builds of one FreeSWITCH** — this builder (local stack) and
+> [`clio/package-build`](https://github.com/clio/package-build) (production
+> `clio-freeswitch`) build the same FreeSWITCH. Keep their module lists the
+> same: a module change must go to both builds. `mod_spandsp` (fax/T.38) is
+> built with the upstream V.18 fix
+> [`76458fa`](https://github.com/signalwire/freeswitch/commit/76458fafc5a9cd0eebe94455ed39f41eac986c67)
+> (`patches/freeswitch/`); see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## License
 
