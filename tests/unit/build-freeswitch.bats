@@ -22,14 +22,14 @@ EOF
   grep -q '^#applications/mod_av$'         "$TMP/modules.conf"
   # mod_spandsp stays enabled (built with the 76458fa V.18 patch)
   grep -q '^applications/mod_spandsp$'     "$TMP/modules.conf"
-  ! grep -q '^#applications/mod_spandsp$'  "$TMP/modules.conf"
+  run grep -q '^#applications/mod_spandsp$' "$TMP/modules.conf"; [ "$status" -eq 1 ]
   # required modules enabled (uncommented, no leading #)
   grep -q '^event_handlers/mod_kazoo$'     "$TMP/modules.conf"
   grep -q '^codecs/mod_opus$'              "$TMP/modules.conf"
   grep -q '^applications/mod_http_cache$'  "$TMP/modules.conf"
   grep -q '^formats/mod_shout$'            "$TMP/modules.conf"
-  ! grep -q '^#applications/mod_http_cache$' "$TMP/modules.conf"
-  ! grep -q '^#formats/mod_shout$'          "$TMP/modules.conf"
+  run grep -q '^#applications/mod_http_cache$' "$TMP/modules.conf"; [ "$status" -eq 1 ]
+  run grep -q '^#formats/mod_shout$'           "$TMP/modules.conf"; [ "$status" -eq 1 ]
 }
 
 @test "configure_modules appends a required module when absent from modules.conf" {
