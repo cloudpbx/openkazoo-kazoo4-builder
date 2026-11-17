@@ -77,7 +77,7 @@ jobs:
           # resolve all its libs (guards the multiarch bundle-glob regression).
           test -e /usr/lib/libspandsp.so.3
           ! ldd /usr/bin/freeswitch | grep -q 'not found'
-          # mod_spandsp (fax/T.38, built with the 76458fa V.18 patch) must ship
+          # mod_spandsp (fax/T.38, built with the upstream 76458fa V.18 fix) must ship
           # and resolve its libs. The freeswitch deb declares no Depends, so on
           # this bare container libfreeswitch's own libs (pcre, speex, odbc,
           # tiff, jpeg) are unresolved for every module; consumers install them

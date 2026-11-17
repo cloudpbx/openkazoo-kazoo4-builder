@@ -28,7 +28,7 @@ FS_ENABLE_MODULES=(
 # Disable the modules this build does not support (mod_verto, mod_signalwire,
 # mod_av: SignalWire/FFmpeg4-incompatible), then enable each required module
 # (uncommenting it, or appending if absent). mod_spandsp (fax/T.38) stays
-# enabled: it compiles against our spandsp only with the V.18 patch below.
+# enabled: it compiles against our spandsp only with the V.18 fix below.
 # Portable across GNU/BSD sed: no `sed -i`; write to .new then mv.
 configure_modules() {
   local f="$1" out="$1.new" m
@@ -54,10 +54,22 @@ assert_mod_kazoo_fix() {
 
 # FS 1.10.9's mod_spandsp does not compile against spandsp >= 2023-06-02 (our
 # config/spandsp.ref): the V.18 constants were renamed and v18_init takes a
-# status callback. Upstream signalwire/freeswitch@76458fa fixes it; we apply it
-# as patches/freeswitch/76458fa-mod_spandsp-v18.patch. It adds handle_v18_status.
+# status callback. Upstream signalwire/freeswitch@76458fa fixes it.
+# config/mod_spandsp_v18.ref pins that commit, and apply_upstream_commit applies
+# it. It adds handle_v18_status.
 assert_mod_spandsp_v18_fix() {
   grep -q handle_v18_status "$1" || die "mod_spandsp V.18 fix missing (no handle_v18_status in $1)"
+}
+
+# apply_upstream_commit <clone> <sha>: apply one upstream commit, pinned by its
+# full SHA in config/, to our shallow clone of the release tag. --depth 2 also
+# fetches the commit's parent, so the diff is that commit only, not the upstream
+# history between the tag and the commit.
+apply_upstream_commit() {
+  local dir="$1" sha="$2"
+  git -C "$dir" fetch --quiet --depth 2 origin "$sha" || die "cannot fetch upstream commit $sha"
+  git -C "$dir" diff "$sha^" "$sha" | git -C "$dir" apply \
+    || die "upstream commit $sha does not apply to $dir"
 }
 
 [ "${1:-}" = "--lib-only" ] && return 0
@@ -104,7 +116,7 @@ cp -a "$B"/mod_kazoo-openkazoo/*.c "$B"/mod_kazoo-openkazoo/*.h \
       "$B"/mod_kazoo-openkazoo/*.S "$B"/mod_kazoo-openkazoo/kazoo.conf.xml \
       "$B/freeswitch/src/mod/event_handlers/mod_kazoo/"
 assert_mod_kazoo_fix "$B/freeswitch/src/mod/event_handlers/mod_kazoo/kazoo_node.c"
-git -C "$B/freeswitch" apply "$ROOT/patches/freeswitch/76458fa-mod_spandsp-v18.patch"
+apply_upstream_commit "$B/freeswitch" "${MOD_SPANDSP_V18_REF:?}"
 assert_mod_spandsp_v18_fix "$B/freeswitch/src/mod/applications/mod_spandsp/mod_spandsp_dsp.c"
 
 ( cd "$B/freeswitch" && ./bootstrap.sh -j )

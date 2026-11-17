@@ -11,7 +11,7 @@ playbook; the repository layout follows `openkazoo-kazoo5-builder`.
 |---|---|---|---|
 | `erlang` | 26.2.5.20 | `erlang/otp` (via kerl) | OTP 26 is the floor **and** ceiling — see below |
 | `kazoo` | 4.4 | `cloudpbx/openkazoo@4.4` | `rebar3 compile && rebar3 tar` (default profile), `include_erts=false` |
-| `freeswitch` | 1.10.9 | `signalwire/freeswitch` | Full default module set (incl. `mod_sofia`) plus `mod_kazoo` (overlaid from `openkazoo/freeswitch-mod_kazoo@4.4`), `mod_opus` (OPUS), `mod_shout` (MP3), `mod_http_cache`, `mod_spandsp` (fax/T.38, with the `76458fa` V.18 patch). + sofia-sip 1.13.17 & spandsp from source. **No video** (`--disable-libvpx/--disable-libyuv`, see DECISIONS.md D-01). |
+| `freeswitch` | 1.10.9 | `signalwire/freeswitch` | Full default module set (incl. `mod_sofia`) plus `mod_kazoo` (overlaid from `openkazoo/freeswitch-mod_kazoo@4.4`), `mod_opus` (OPUS), `mod_shout` (MP3), `mod_http_cache`, `mod_spandsp` (fax/T.38, with the upstream `76458fa` V.18 fix). + sofia-sip 1.13.17 & spandsp from source. **No video** (`--disable-libvpx/--disable-libyuv`, see DECISIONS.md D-01). |
 
 ### FreeSWITCH module selection
 
@@ -28,16 +28,19 @@ This builder and `clio/package-build` (the production `clio-freeswitch`) are two
 builds of the same FreeSWITCH. Keep their module lists the same: a module change
 must go to both builds.
 
-### The mod_spandsp V.18 patch
+### The mod_spandsp V.18 fix
 
 FreeSWITCH 1.10.9's `mod_spandsp` does not compile against spandsp from
 2023-06-02 or later, and `config/spandsp.ref` pins a later spandsp. spandsp
-renamed its V.18 constants and added a status callback to `v18_init`. The build
-applies the unmodified upstream fix
+renamed its V.18 constants and added a status callback to `v18_init`. The
+upstream commit
 [signalwire/freeswitch@76458fa](https://github.com/signalwire/freeswitch/commit/76458fafc5a9cd0eebe94455ed39f41eac986c67)
-from `patches/freeswitch/76458fa-mod_spandsp-v18.patch` after the clone and the
-`mod_kazoo` overlay. It then asserts the fix is present (`handle_v18_status` in
-`mod_spandsp_dsp.c`). Remove the patch when the FreeSWITCH pin includes it.
+fixes the module, and `config/mod_spandsp_v18.ref` pins it. After the clone and
+the `mod_kazoo` overlay, `apply_upstream_commit` fetches that commit from GitHub
+and applies its diff. The build then asserts that the fix is present
+(`handle_v18_status` in `mod_spandsp_dsp.c`). FreeSWITCH 1.11.0 and later
+include the commit. Remove the pin when `config/freeswitch.version` moves to
+1.11 or later.
 
 | `kamailio` | 5.8.8 | `kamailio/kamailio` | modules `db_mysql db_postgres tls kazoo rabbitmq` |
 

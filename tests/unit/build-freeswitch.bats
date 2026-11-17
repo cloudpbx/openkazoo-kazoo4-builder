@@ -20,7 +20,7 @@ EOF
   grep -q '^#endpoints/mod_verto$'        "$TMP/modules.conf"
   grep -q '^#applications/mod_signalwire$' "$TMP/modules.conf"
   grep -q '^#applications/mod_av$'         "$TMP/modules.conf"
-  # mod_spandsp stays enabled (built with the 76458fa V.18 patch)
+  # mod_spandsp stays enabled (built with the 76458fa V.18 fix)
   grep -q '^applications/mod_spandsp$'     "$TMP/modules.conf"
   run grep -q '^#applications/mod_spandsp$' "$TMP/modules.conf"; [ "$status" -eq 1 ]
   # required modules enabled (uncommented, no leading #)
@@ -51,4 +51,24 @@ EOF
   run assert_mod_spandsp_v18_fix "$TMP/mod_spandsp_dsp.c"; [ "$status" -eq 0 ]
   printf 'v18_init(NULL, TRUE, mode, V18_AUTOMODING_GLOBAL, put_text_msg, tdd);\n' > "$TMP/mod_spandsp_dsp.c"
   run assert_mod_spandsp_v18_fix "$TMP/mod_spandsp_dsp.c"; [ "$status" -ne 0 ]
+}
+
+@test "apply_upstream_commit applies only the pinned commit to a shallow clone" {
+  export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
+    GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com
+  local up="$TMP/upstream" fs="$TMP/fs" fix
+  git init -q "$up"
+  # GitHub serves a commit by SHA even when no ref points at it.
+  git -C "$up" config uploadpack.allowReachableSHA1InWant true
+  printf 'base\n' > "$up/a.c"; git -C "$up" add a.c; git -C "$up" commit -qm base; git -C "$up" tag v1
+  printf 'other\n' > "$up/b.c"; git -C "$up" add b.c; git -C "$up" commit -qm unrelated
+  printf 'fix\n' >> "$up/a.c"; git -C "$up" commit -qam fix; fix="$(git -C "$up" rev-parse HEAD)"
+  printf 'later\n' >> "$up/a.c"; git -C "$up" commit -qam later
+  git clone -q --depth 1 --branch v1 "file://$up" "$fs"
+
+  apply_upstream_commit "$fs" "$fix"
+  [ "$(cat "$fs/a.c")" = "$(printf 'base\nfix')" ]
+  [ ! -e "$fs/b.c" ]
+
+  run apply_upstream_commit "$fs" 0000000000000000000000000000000000000000; [ "$status" -ne 0 ]
 }
