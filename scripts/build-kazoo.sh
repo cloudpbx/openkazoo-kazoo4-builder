@@ -55,6 +55,21 @@ patch_erts_app_load_types() {
   mv "$out" "$f"
 }
 
+# ecallmgr runs as a second node from the same release, but it must not start
+# kazoo_media: both nodes would bind port 24517, and ecallmgr, the second to
+# start, dies with eaddrinuse. It therefore boots from its own rel with
+# kazoo_media's load type set to none.
+#
+# make_ecallmgr_rel <kazoo.rel> <out> writes that rel. Dies if kazoo_media is
+# absent or already has a load type, so an upstream change cannot silently
+# produce a rel that still starts it.
+make_ecallmgr_rel() {
+  local src="$1" out="$2"
+  grep -Eq '\{kazoo_media,[[:space:]]*"[^"]*"\}' "$src" \
+    || die "no {kazoo_media,\"<vsn>\"} entry in $src"
+  sed -E 's/\{kazoo_media,[[:space:]]*"([^"]*)"\}/{kazoo_media,"\1",none}/' "$src" > "$out"
+}
+
 # synth_version <branch> <yyyymmdd> <shortsha> -> 4.4.0~<branch>.<date>.<sha>
 synth_version() { echo "4.4.0~${1}.${2}.${3}"; }
 
@@ -140,6 +155,50 @@ echo ">> Gating boot script starts the ERTS apps"
                   [Missing, OutOfOrder]),
         halt(1)
     end.' ) || die "boot script gate failed — check the relx load types in rebar.config"
+
+# Build the ecallmgr boot here so dpkg owns it. kazoo-deploy used to derive it
+# on the host after install, which dpkg knew nothing about: an in-place upgrade
+# replaced the lib dirs and left kazoo_ecallmgr.boot pointing at deleted ones,
+# and ecallmgr crash-looped with load_failed (CORV-1506). The `variables`
+# option writes the staging prefix as $ROOT, matching kazoo.boot, so the paths
+# resolve under /opt/kazoo once installed.
+echo ">> Building kazoo_ecallmgr boot script (kazoo_media load type none)"
+make_ecallmgr_rel "$REL_DIR/kazoo.rel" "$REL_DIR/kazoo_ecallmgr.rel"
+( cd "$REL_DIR" && KAZOO_STAGE_ROOT="$STAGE/opt/kazoo" erl -noshell -eval '
+    Root = os:getenv("KAZOO_STAGE_ROOT"),
+    Path = [filename:dirname(F) || F <- filelib:wildcard(Root ++ "/lib/*/ebin/*.app")],
+    Opts = [{path, Path}, {variables, [{"ROOT", Root}]}, no_warn_sasl, silent],
+    case systools:make_script("kazoo_ecallmgr", Opts) of
+      {ok, _, _} -> halt(0);
+      Err -> io:format("   FATAL: make_script kazoo_ecallmgr: ~p~n", [Err]), halt(1)
+    end.' ) || die "could not build kazoo_ecallmgr.boot"
+
+echo ">> Gating the ecallmgr boot script"
+( cd "$REL_DIR" && KAZOO_STAGE_ROOT="$STAGE/opt/kazoo" erl -noshell -eval '
+    Root = os:getenv("KAZOO_STAGE_ROOT"),
+    {ok, Bin} = file:read_file("kazoo_ecallmgr.boot"),
+    {script, _, Instrs} = binary_to_term(Bin),
+    Started = [A || {apply, {application, start_boot, [A | _]}} <- Instrs],
+    Loaded = [A || {apply, {application, load, [{application, A, _} | _]}} <- Instrs],
+    Required = [crypto, ssl, public_key, asn1, compiler, runtime_tools, syntax_tools, kazoo],
+    Missing = [A || A <- Required, not lists:member(A, Started)],
+    Media = [kazoo_media || lists:member(kazoo_media, Loaded ++ Started)],
+    Paths = lists:usort(lists:append([P || {path, P} <- Instrs])),
+    BadPaths = [P || P <- Paths,
+                     case string:prefix(P, "$ROOT") of
+                       nomatch -> true;
+                       Rest -> not filelib:is_dir(Root ++ Rest)
+                     end],
+    case {Missing, Media, BadPaths} of
+      {[], [], []} ->
+        io:format("   kazoo_ecallmgr starts ~p applications, kazoo_media excluded~n",
+                  [length(Started)]),
+        halt(0);
+      _ ->
+        io:format("   FATAL: never started ~p~n   FATAL: loads ~p~n   FATAL: bad paths ~p~n",
+                  [Missing, Media, BadPaths]),
+        halt(1)
+    end.' ) || die "ecallmgr boot script gate failed"
 
 write_deb_control "$STAGE" kazoo "$PKG_VERSION" "$ARCH" \
   "Kazoo 4.4 UCaaS platform (built against Erlang/OTP ${OTP_VERSION}, include_erts=false)" \

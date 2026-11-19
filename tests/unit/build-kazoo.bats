@@ -49,3 +49,29 @@ setup() {
   run synth_version 4.4 20260722 deadbeef
   [ "$output" = "4.4.0~4.4.20260722.deadbeef" ]
 }
+
+@test "make_ecallmgr_rel sets kazoo_media to load type none" {
+  printf '%s\n' '{release,{"kazoo","0.0.0"},' '  [{kernel,"9.2.4.11"},' \
+    '   {kazoo_media,"0.0.0+build.1.ref5555162"},' '   {kazoo,"0.0.0"}]}.' > "$TMP/kazoo.rel"
+  make_ecallmgr_rel "$TMP/kazoo.rel" "$TMP/kazoo_ecallmgr.rel"
+  grep -qF '{kazoo_media,"0.0.0+build.1.ref5555162",none}' "$TMP/kazoo_ecallmgr.rel"
+}
+
+@test "make_ecallmgr_rel leaves every other entry alone" {
+  printf '%s\n' '{kernel,"9.2.4.11"},' '{kazoo_media,"1"},' '{kazoo,"0.0.0"},' \
+    '{callflow,"1",none}' > "$TMP/kazoo.rel"
+  make_ecallmgr_rel "$TMP/kazoo.rel" "$TMP/kazoo_ecallmgr.rel"
+  diff <(grep -v kazoo_media "$TMP/kazoo.rel") <(grep -v kazoo_media "$TMP/kazoo_ecallmgr.rel")
+}
+
+@test "make_ecallmgr_rel dies when kazoo_media is absent" {
+  printf '%s\n' '{kernel,"9.2.4.11"},' '{kazoo,"0.0.0"}' > "$TMP/kazoo.rel"
+  run make_ecallmgr_rel "$TMP/kazoo.rel" "$TMP/kazoo_ecallmgr.rel"
+  [ "$status" -eq 2 ]
+}
+
+@test "make_ecallmgr_rel dies when kazoo_media already has a load type" {
+  printf '%s\n' '{kazoo_media,"1",load}' > "$TMP/kazoo.rel"
+  run make_ecallmgr_rel "$TMP/kazoo.rel" "$TMP/kazoo_ecallmgr.rel"
+  [ "$status" -eq 2 ]
+}
