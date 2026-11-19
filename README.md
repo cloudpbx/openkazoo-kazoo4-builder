@@ -43,6 +43,14 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the
 > (audio telephony only). This is a deliberate scope decision; see
 > [docs/DECISIONS.md](docs/DECISIONS.md) (D-01).
 
+> **Two builds of one FreeSWITCH** — this builder (local stack) and
+> [`clio/package-build`](https://github.com/clio/package-build) (production
+> `clio-freeswitch`) build the same FreeSWITCH. Keep their module lists the
+> same: a module change must go to both builds. `mod_spandsp` (fax/T.38) is
+> built with the upstream V.18 fix
+> [`76458fa`](https://github.com/signalwire/freeswitch/commit/76458fafc5a9cd0eebe94455ed39f41eac986c67)
+> (pinned in `config/mod_spandsp_v18.ref`); see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

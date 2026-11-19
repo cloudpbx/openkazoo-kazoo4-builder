@@ -25,12 +25,14 @@ FS_ENABLE_MODULES=(
   say/mod_say_pt                # Portuguese
 )
 
-# Disable SignalWire/FFmpeg4-incompatible modules, then enable each required
-# module (uncommenting it, or appending if absent).
+# Disable the modules this build does not support (mod_verto, mod_signalwire,
+# mod_av: SignalWire/FFmpeg4-incompatible), then enable each required module
+# (uncommenting it, or appending if absent). mod_spandsp (fax/T.38) stays
+# enabled: it compiles against our spandsp only with the V.18 fix below.
 # Portable across GNU/BSD sed: no `sed -i`; write to .new then mv.
 configure_modules() {
   local f="$1" out="$1.new" m
-  sed -E 's,^(endpoints/mod_verto|applications/mod_signalwire|applications/mod_av|applications/mod_spandsp)$,#\1,' "$f" > "$out"
+  sed -E 's,^(endpoints/mod_verto|applications/mod_signalwire|applications/mod_av)$,#\1,' "$f" > "$out"
   mv "$out" "$f"
   for m in "${FS_ENABLE_MODULES[@]}"; do
     if grep -qE "^#?${m}$" "$f"; then
@@ -48,6 +50,26 @@ configure_modules() {
 assert_mod_kazoo_fix() {
   local n; n="$(grep -c ei_skip_term "$1" || true)"
   [ "${n:-0}" -ge 3 ] || die "mod_kazoo alias-tag fix missing (ei_skip_term=$n, need >=3)"
+}
+
+# FS 1.10.9's mod_spandsp does not compile against spandsp >= 2023-06-02 (our
+# config/spandsp.ref): the V.18 constants were renamed and v18_init takes a
+# status callback. Upstream signalwire/freeswitch@76458fa fixes it.
+# config/mod_spandsp_v18.ref pins that commit, and apply_upstream_commit applies
+# it. It adds handle_v18_status.
+assert_mod_spandsp_v18_fix() {
+  grep -q handle_v18_status "$1" || die "mod_spandsp V.18 fix missing (no handle_v18_status in $1)"
+}
+
+# apply_upstream_commit <clone> <sha>: apply one upstream commit, pinned by its
+# full SHA in config/, to our shallow clone of the release tag. --depth 2 also
+# fetches the commit's parent, so the diff is that commit only, not the upstream
+# history between the tag and the commit.
+apply_upstream_commit() {
+  local dir="$1" sha="$2"
+  git -C "$dir" fetch --quiet --depth 2 origin "$sha" || die "cannot fetch upstream commit $sha"
+  git -C "$dir" diff "$sha^" "$sha" | git -C "$dir" apply \
+    || die "upstream commit $sha does not apply to $dir"
 }
 
 [ "${1:-}" = "--lib-only" ] && return 0
@@ -94,6 +116,8 @@ cp -a "$B"/mod_kazoo-openkazoo/*.c "$B"/mod_kazoo-openkazoo/*.h \
       "$B"/mod_kazoo-openkazoo/*.S "$B"/mod_kazoo-openkazoo/kazoo.conf.xml \
       "$B/freeswitch/src/mod/event_handlers/mod_kazoo/"
 assert_mod_kazoo_fix "$B/freeswitch/src/mod/event_handlers/mod_kazoo/kazoo_node.c"
+apply_upstream_commit "$B/freeswitch" "${MOD_SPANDSP_V18_REF:?}"
+assert_mod_spandsp_v18_fix "$B/freeswitch/src/mod/applications/mod_spandsp/mod_spandsp_dsp.c"
 
 ( cd "$B/freeswitch" && ./bootstrap.sh -j )
 configure_modules "$B/freeswitch/modules.conf"
@@ -119,7 +143,7 @@ export PATH="/usr/local/lib/erlang/bin:$PATH"
   && make install )
 # Gate: every requested module must have produced a .so (mod_kazoo missing =
 # silent ecallmgr failure; the media modules are the point of this build).
-for _m in mod_kazoo mod_opus mod_http_cache mod_shout \
+for _m in mod_kazoo mod_opus mod_http_cache mod_shout mod_spandsp \
           mod_say_es mod_say_fr mod_say_de mod_say_pt; do
   [ -f "/usr/lib/freeswitch/mod/${_m}.so" ] \
     || die "${_m}.so not built — check FreeSWITCH module deps/config"
@@ -174,7 +198,7 @@ printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postinst"
 printf '#!/bin/sh\nldconfig\n' > "$STAGE/DEBIAN/postrm"
 chmod 755 "$STAGE/DEBIAN/postinst" "$STAGE/DEBIAN/postrm"
 write_deb_control "$STAGE" freeswitch "$VER" "$ARCH" \
-  "FreeSWITCH ${FREESWITCH_VERSION} with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), HTTP cache, and say engines (en/es/fr/de/pt)"
+  "FreeSWITCH ${FREESWITCH_VERSION} with mod_kazoo (OTP 24+ alias-tag fix), OPUS, MP3 (mod_shout), HTTP cache, fax/T.38 (mod_spandsp), and say engines (en/es/fr/de/pt)"
 dpkg-deb --build "$STAGE" "$DEB"
 rm -rf "$STAGE"
 echo ">> Done: $DEB"; ls -la "$DEB"
